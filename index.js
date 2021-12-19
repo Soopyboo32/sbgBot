@@ -1108,7 +1108,7 @@ register("worldLoad",()=>{
                         {
                             name: "Warden Heart",
                             chance: 1
-                        },
+                        }
                     ]
                 }
 
