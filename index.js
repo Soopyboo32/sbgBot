@@ -2,6 +2,32 @@
 /// <reference lib="es2015" />
 export default "Nothing is here";
 import commandQueue from './command.js';
+const File = Java.type("java.io.File")
+const URL = Java.type("java.net.URL");
+const PrintStream = Java.type("java.io.PrintStream");
+const Byte = Java.type("java.lang.Byte");
+
+new Thread(()=>{
+    let latestVer = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/latestVer.json")).version
+
+    let currVer = JSON.parse(FileLib.read("sbgBot", "metadata.json")).version
+
+    if(currVer != latestVer){
+        new File("./config/ChatTriggers/modules/sbgBotTempDownload").mkdir()
+
+        urlToFile("http://soopymc.my.to/api/sbgBot/downloadLatest.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", 10000, 20000)
+
+        FileLib.unzip("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/")
+
+        FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBot"))
+
+        new File("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/sbgBot").renameTo(new File("./config/ChatTriggers/modules/sbgBot"))
+
+        FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBotTempDownload"))
+
+        ChatLib.command("ct load", true)
+    }
+}).start()
 
 let isSoopy = Player.getUUID().toString().replace(/-/ig, "") === "dc8c39647b294e03ae9ed13ebd65dd29"
 let isSbgAdmin = isSoopy || Player.getUUID().toString().replace(/-/ig, "") === "b9d90392124048bb993f8f1b836657a8" || Player.getUUID().toString().replace(/-/ig, "") === "a80b52f6707a4f8286cabc6e95cf9fdf"
@@ -4760,3 +4786,21 @@ register("worldLoad",()=>{
 
 
 let add_dashes_to_uuid =i=>i.substr(0,8)+"-"+i.substr(8,4)+"-"+i.substr(12,4)+"-"+i.substr(16,4)+"-"+i.substr(20);
+
+function urlToFile(url, destination, connecttimeout, readtimeout) {
+    const d = new File(destination);
+    d.getParentFile().mkdirs();
+    const connection = new URL(url).openConnection();
+    connection.setDoOutput(true);
+    connection.setConnectTimeout(connecttimeout);
+    connection.setReadTimeout(readtimeout);
+    const IS = connection.getInputStream();
+    const FilePS = new PrintStream(destination);
+    let buf = new Packages.java.lang.reflect.Array.newInstance(Byte.TYPE, 65536);
+    let len;
+    while ((len = IS.read(buf)) > 0) {
+        FilePS.write(buf, 0, len);
+    }
+    IS.close();
+    FilePS.close();
+}
