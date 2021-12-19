@@ -1083,6 +1083,32 @@ register("worldLoad",()=>{
                             name: "Ender Slayer VII",
                             chance: 1
                         }
+                    ],
+                    rev: [
+                        {
+                            name: "Snake Rune I",
+                            chance: 44
+                        },
+                        {
+                            name: "Beheaded Horror",
+                            chance: 22
+                        },
+                        {
+                            name: "Scythe Blade",
+                            chance: 11
+                        },
+                        {
+                            name: "Smite VII",
+                            chance: 11
+                        },
+                        {
+                            name: "Shard of the Shredded",
+                            chance: 11
+                        },
+                        {
+                            name: "Warden Heart",
+                            chance: 1
+                        },
                     ]
                 }
 
