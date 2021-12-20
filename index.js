@@ -1301,7 +1301,7 @@ register("worldLoad", () => {
                     ]
                 }
 
-                let chosenArr = type === "all" ? Object.values(data).flat() : data[aliases[type] || type]
+                let chosenArr = type === "all" ? flattenArr(Object.values(data)) : data[aliases[type] || type]
 
                 let arrTotal = chosenArr.reduce((total, item) => total + item.chance, 0)
                 // console.log(arrTotal)
@@ -4967,4 +4967,18 @@ function urlToFile(url, destination, connecttimeout, readtimeout) {
     }
     IS.close();
     FilePS.close();
+}
+
+
+function flattenArr(arr){
+    let ret = []
+    arr.forEach(e=>{
+        if(Array.isArray(e)){
+            ret.push(...flattenArr(e))
+        }else{
+            ret.push(e)
+        }
+    })
+
+    return ret
 }
