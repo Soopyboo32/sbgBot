@@ -7,28 +7,6 @@ const URL = Java.type("java.net.URL");
 const PrintStream = Java.type("java.io.PrintStream");
 const Byte = Java.type("java.lang.Byte");
 
-new Thread(()=>{
-    let latestVer = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/latestVer.json")).version
-
-    let currVer = JSON.parse(FileLib.read("sbgBot", "metadata.json")).version
-
-    if(currVer != latestVer){
-        new File("./config/ChatTriggers/modules/sbgBotTempDownload").mkdir()
-
-        urlToFile("http://soopymc.my.to/api/sbgBot/downloadLatest.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", 10000, 20000)
-
-        FileLib.unzip("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/")
-
-        FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBot"))
-
-        new File("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/sbgBot").renameTo(new File("./config/ChatTriggers/modules/sbgBot"))
-
-        FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBotTempDownload"))
-
-        ChatLib.command("ct load", true)
-    }
-}).start()
-
 let isSoopy = Player.getUUID().toString().replace(/-/ig, "") === "dc8c39647b294e03ae9ed13ebd65dd29"
 let isSbgAdmin = isSoopy || Player.getUUID().toString().replace(/-/ig, "") === "b9d90392124048bb993f8f1b836657a8" || Player.getUUID().toString().replace(/-/ig, "") === "a80b52f6707a4f8286cabc6e95cf9fdf"
 let inSbg = isSbgAdmin
@@ -36,16 +14,41 @@ let inSbg = isSbgAdmin
 // const Base64 = Java.type("java.util.Base64");
 // const CompressedStreamTools = Java.type("net.minecraft.nbt.CompressedStreamTools");
 let botLoaded = false
-register("worldLoad",()=>{
-    if(botLoaded) return;
+register("worldLoad", () => {
+    if (botLoaded) return;
 
     botLoaded = true
 
     new Thread(() => {
         let res = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/getIsBotUser.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + Player.getUUID().toString()))
         if (res.success) {
+
+            let latestVer = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/latestVer.json")).version
+
+            let currVer = JSON.parse(FileLib.read("sbgBot", "metadata.json")).version
+
+            if (currVer != latestVer) {
+                ChatLib.chat("Updatign sbgBot to version " + latestVer + "...")
+                new File("./config/ChatTriggers/modules/sbgBotTempDownload").mkdir()
+
+                urlToFile("http://soopymc.my.to/api/sbgBot/downloadLatest.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", 10000, 20000)
+
+                FileLib.unzip("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/")
+
+                FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBot"))
+
+                new File("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/sbgBot").renameTo(new File("./config/ChatTriggers/modules/sbgBot"))
+
+                FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBotTempDownload"))
+
+                Thread.sleep(1000)
+
+                ChatLib.command("ct load", true)
+                return
+            }
+
             let guild = res.guild
-            inSbg = guild==="5fea32eb8ea8c9724b8e3f3c"
+            inSbg = guild === "5fea32eb8ea8c9724b8e3f3c"
             let skillData = JSON.parse(FileLib.getUrlContent("https://api.hypixel.net/resources/skyblock/skills"))
             ChatLib.chat("Hosting guild chat bot...")
             let lowestBins = {}
@@ -54,7 +57,7 @@ register("worldLoad",()=>{
             let scammerData = {}
             let senitherData = {}
             let guildData = {}
-    
+
             let commandAlias = {
                 "cheapestbin": "lowestbin",
                 "bin": "lowestbin",
@@ -62,22 +65,22 @@ register("worldLoad",()=>{
                 "stoneof": "whatstone",
                 "nw": "networth",
                 "bz": "bazzar",
-                "sc":"scammercheck",
-                "scammer":"scammercheck",
+                "sc": "scammercheck",
+                "scammer": "scammercheck",
                 "fetch": "fetchur",
                 "stalk": "whatdoing",
-                "fragbot":"getbot",
-                "fragbots":"getbot",
-                "ans":"answer",
+                "fragbot": "getbot",
+                "fragbots": "getbot",
+                "ans": "answer",
                 "sa": "skillaverage",
                 "cata": "dungeon",
                 "catacombs": "dungeon",
                 "catacomb": "dungeon"
             }
-    
+
             let commandsSpeed = 0
             let commandsSpeedLimit = 3
-    
+
             let lastUpdateLowestBins = 0
             let lastCommandOverLimit = false;
             let asf = 0
@@ -86,51 +89,51 @@ register("worldLoad",()=>{
             let pollTime = 0
             let pollAnswers = {}
 
-            if(isSoopy){
-                register("command",()=>{
+            if (isSoopy) {
+                register("command", () => {
                     let html = ""
 
-                        // commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Possible commands are:"))
+                    // commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Possible commands are:"))
                     Object.keys(commandFunctions).forEach((commandF) => {
                         console.log(commandF)
                     })
-                            // case "aliases":
-    
-                            //     commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot Command aliases "))
-                            //     Object.keys(commandAlias).forEach((alias) => {
-                            //         commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot " + alias + " runs " + commandAlias[alias]))
-                            //     })
-                            //     break;
-    
+                    // case "aliases":
+
+                    //     commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot Command aliases "))
+                    //     Object.keys(commandAlias).forEach((alias) => {
+                    //         commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot " + alias + " runs " + commandAlias[alias]))
+                    //     })
+                    //     break;
+
                 }).setName("genhtml")
             }
 
-    
+
             register("tick", () => {
                 commandsSpeed *= 0.9997
                 if (commandsSpeed > commandsSpeedLimit) {
                     if (!lastCommandOverLimit) {
                         lastCommandOverLimit = true
-    
+
                         commandsSpeed++
                         //commandQueue.other.push(spamBypass("/gc @everyone, bot messages in guild chat have been moved to dms due to spam"))
                     }
                 } else {
                     if (lastCommandOverLimit) {
                         lastCommandOverLimit = false
-    
+
                         //commandQueue.other.push(spamBypass("/gc @everyone, bot messages are now back in guild chat"))
                     }
                 }
             })
-    
+
             register("chat", (player, message, e) => {
-    
+
                 //player = player.replace(/(\[[MVIP&0123456789ABCDEFLMNOabcdeflmnor\+]+\])+? /g, "").replace(/\[[A-z]*\]/g, "").replace(/(&[0123456789ABCDEFLMNOabcdeflmnor])|\[|\]| |\+/g, "")
-                if(!isSoopy  || player.includes("Soopyboo32")){
+                if (!isSoopy || player.includes("Soopyboo32")) {
                     cancel(e)
                 }
-                    //ChatLib.chat("&r&2SBGBOT > &r&7[DM] " + "&6" + player + "&a" + " -> " + "&r" + message)
+                //ChatLib.chat("&r&2SBGBOT > &r&7[DM] " + "&6" + player + "&a" + " -> " + "&r" + message)
             }).setChatCriteria("&dTo &r${player}&r&7: &r&7@sbgbot ${message}&r")
             let i = 100;
             register("tick", () => {
@@ -140,14 +143,14 @@ register("worldLoad",()=>{
                         i++
                         if (i > 60) {
                             i = 0
-                            try{
+                            try {
                                 scammerData = JSON.parse(FileLib.getUrlContent("https://raw.githubusercontent.com/skyblockz/pricecheckbot/master/scammer.json"))
                                 lowestBinsAvg = JSON.parse(FileLib.getUrlContent("http://moulberry.codes/auction_averages_lbin/1day.json")) //Uses moulberrys api, i will maby code my own sometime tho
                                 senitherData = JSON.parse(FileLib.getUrlContent("https://hypixel-app-api.senither.com/leaderboard/players/" + guild))
-                            }catch(e){}
+                            } catch (e) { }
                         }
                         let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/guild/" + guild))
-                        if(data.success){
+                        if (data.success) {
                             guildData = data.data
                         }
                         bazaar = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/bazaar")) //Uses leas api, i will maby code my own sometime tho
@@ -155,7 +158,7 @@ register("worldLoad",()=>{
                         let lowestBinsNew = {}
                         let petReplace = ["COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"]
                         let petList = ["BAT", "BLAZE", "CHICKEN", "HORSE", "JERRY", "OCELOT", "PIGMAN", "RABBIT", "SHEEP", "SILVERFISH", "WITHER_SKELETON", "SKELETON_HORSE", "WOLF", "ENDERMAN", "PHOENIX", "MAGMA_CUBE", "FLYING_FISH", "BLUE_WHALE", "TIGER", "LION", "PARROT", "SNOWMAN", "TURTLE", "BEE", "ENDER_DRAGON", "GUARDIAN", "SQUID", "GIRAFFE", "ELEPHANT", "MONKEY", "SPIDER", "ENDERMITE", "GHOUL", "JELLYFISH", "PIG", "ROCK", "SKELETON", "ZOMBIE", "DOLPHIN", "BABY_YETI", "MEGALODON", "GOLEM", "HOUND", "TARANTULA", "BLACK_CAT", "SPIRIT", "GRIFFIN"]
-    
+
                         Object.keys(lowestBinsData).forEach((key) => {
                             let keyNew = key
                             if (key.includes(";")) {
@@ -170,20 +173,20 @@ register("worldLoad",()=>{
                             lowestBinsNew[key] = lowestBinsData[key]
                         })
                         lowestBins = lowestBinsNew
-    
+
                         let infoThing = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/getInfo.json?uuid=" + Player.getUUID().toString()))
-                        if(infoThing.success){
-                            infoThing.data.forEach((a)=>{
-                                if(a.action === "reminder"){
+                        if (infoThing.success) {
+                            infoThing.data.forEach((a) => {
+                                if (a.action === "reminder") {
                                     commandQueue.other.push(spamBypass("/gc @everyone, " + a.text))
                                 }
-                                if(a.action === "alert"){
+                                if (a.action === "alert") {
                                     commandQueue.other.push(spamBypass("/gc @everyone, " + a.text))
                                 }
-                                if(a.action === "gchat"){
+                                if (a.action === "gchat") {
                                     commandQueue.other.push("/gc " + a.text)
                                 }
-                                if(a.action === "setRank"){
+                                if (a.action === "setRank") {
                                     commandQueue.other.push("/g setRank " + a.player + " " + a.rank)
                                 }
                             })
@@ -194,18 +197,18 @@ register("worldLoad",()=>{
                     asf = Date.now()
                     new Thread(() => {
                         let infoThing = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/getInfo.json?uuid=" + Player.getUUID().toString()))
-                        if(infoThing.success){
-                            infoThing.data.forEach((a)=>{
-                                if(a.action === "reminder"){
+                        if (infoThing.success) {
+                            infoThing.data.forEach((a) => {
+                                if (a.action === "reminder") {
                                     commandQueue.other.push(spamBypass("/gc @everyone, " + a.text))
                                 }
-                                if(a.action === "alert"){
+                                if (a.action === "alert") {
                                     commandQueue.other.push(spamBypass("/gc @everyone, " + a.text))
                                 }
-                                if(a.action === "gchat"){
+                                if (a.action === "gchat") {
                                     commandQueue.other.push("/gc " + a.text)
                                 }
-                                if(a.action === "setRank"){
+                                if (a.action === "setRank") {
                                     commandQueue.other.push("/g setRank " + a.player + " " + a.rank)
                                 }
                             })
@@ -216,7 +219,7 @@ register("worldLoad",()=>{
             // register("chat",(e)=>{
             //     if(!inSbg) return;f
             //     let mess = (new Message(e)).getFormattedText()
-    
+
             //     new Thread(()=>{
             //         FileLib.getUrlContent("http://soopymc.my.to/api/sbgDiscord/newGuildChatMessageS.json?key=HoVoiuWfpdAjJhfTj0YN&message=" + encodeURIComponent(mess))
             //     }).start()
@@ -224,7 +227,7 @@ register("worldLoad",()=>{
             // register("chat",(e)=>{
             //     if(!inSbg) return;
             //     let mess = (new Message(e)).getFormattedText()
-    
+
             //     new Thread(()=>{
             //         FileLib.getUrlContent("http://soopymc.my.to/api/sbgDiscord/newGuildChatMessage.json?key=HoVoiuWfpdAjJhfTj0YN&message=" + encodeURIComponent("&b-----------------------------------------------------&r"))
             //         FileLib.getUrlContent("http://soopymc.my.to/api/sbgDiscord/newGuildChatMessage.json?key=HoVoiuWfpdAjJhfTj0YN&message=" + encodeURIComponent(mess))
@@ -234,12 +237,12 @@ register("worldLoad",()=>{
             // register("chat",(e)=>{
             //     if(!inSbg) return;
             //     let mess = (new Message(e)).getFormattedText()
-    
+
             //     new Thread(()=>{
             //         FileLib.getUrlContent("http://soopymc.my.to/api/sbgDiscord/newGuildChatMessage.json?key=HoVoiuWfpdAjJhfTj0YN&message=" + encodeURIComponent(mess))
             //     }).start()
             // }).setChatCriteria("&r&2Guild > ${*}")
-    
+
             register("chat", (player, message) => {
                 if (message.substr(0, 1) !== "-" && message.substr(0, 1) !== "/") { return }
                 player = player.replace(/(\[[MVIP&0123456789ABCDEFLMNOabcdeflmnor\+]+\])+? /g, "").replace(/\[[A-z]*\]/g, "").replace(/(&[0123456789ABCDEFLMNOabcdeflmnor])|\[|\]| |\+/g, "")
@@ -247,31 +250,31 @@ register("worldLoad",()=>{
                 message = message.replace(/ (.)\1+$/g, "").trim()
                 let args = message.split(" ")
                 let command = args[0]
-    
+
                 ranCommand(player, command, args)
-    
+
             }).setChatCriteria("&r&2Guild > ${player}&f: &r${message}&r")
-    
-    
+
+
             function ranCommand(player, command, args) {
-    
+
                 new Thread(() => {
                     Thread.sleep((commandQueue.other.length + commandQueue.dm.length) * 100)
                     commandsSpeed++
 
                     let tcommand = commandFunctions[command] || commandFunctions[commandAlias[command]]
-                    
-                    let rank = guildData.members.filter(f=>{
-                        return f.playerInfo.uuid===Player.getUUID().replace(/-/g,"")
+
+                    let rank = guildData.members.filter(f => {
+                        return f.playerInfo.uuid === Player.getUUID().replace(/-/g, "")
                     })[0]?.guildInfo?.rank || "notinguildpepega";
-                    if(rank === "Staff" || rank === "Guild Master"){
+                    if (rank === "Staff" || rank === "Guild Master") {
                         tcommand = tcommand || commandFunctionsStaff[command] || commandFunctionsStaff[commandAlias[command]]
                     }
-                    
+
                     if (tcommand) {
                         let res = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/shouldRunCommand.json?key=lkRFxoMYwrkgovPRn2zt&command=" + sha256(player + ": " + args.join(" "))))
                         if (res.result) {
-                            tcommand(player, command, args, (message)=>{
+                            tcommand(player, command, args, (message) => {
                                 if (commandsSpeed > commandsSpeedLimit) {
                                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + message))
                                 } else {
@@ -281,10 +284,10 @@ register("worldLoad",()=>{
                         }
                         return;
                     }
-    
+
                 }).start()
             }
-    
+
             let reforgeToStone = {
                 "Necrotic": {
                     "name": "Necromancer's Brooch",
@@ -419,7 +422,7 @@ register("worldLoad",()=>{
                     "id": "WITHER_BLOOD"
                 }
             }
-    
+
             let commandFunctions = {}
             let commandFunctionsNonGuild = {}
             let commandFunctionsStaff = {}
@@ -429,23 +432,23 @@ register("worldLoad",()=>{
                 "that is not poggers",
                 "ur iq: 0"
             ]
-    
-            if (isSoopy || Player.getUUID().toString().replace(/-/g,"") === "9e05662285e34504bafac91a7cbfd501") { //owoenz
-    
-    
+
+            if (isSoopy || Player.getUUID().toString().replace(/-/g, "") === "9e05662285e34504bafac91a7cbfd501") { //owoenz
+
+
                 //-----------------------------------------------------
                 //             SOOPY BOT POGGGGGGGGGGGGG
                 //-----------------------------------------------------
-                
+
                 register("chat", (player, message) => {
                     if (message.substr(0, 1) !== "-" && message.substr(0, 1) !== "/") { return }
                     player = player.replace(/(\[[MVIP&0123456789ABCDEFLMNOabcdeflmnor\+]+\])+? /g, "").replace(/\[[A-z]*\]/g, "").replace(/(&[0123456789ABCDEFLMNOabcdeflmnor])|\[|\]| |\+/g, "")
                     message = message.substr(1, message.length - 1)
                     let args = message.split(" ")
                     let command = args[0]
-    
+
                     ranCommandNonGuild(player, "pc", command, args)
-    
+
                 }).setChatCriteria("&r&9Party &8> ${player}&f: &r${message}&r")
                 register("chat", (player, message) => {
                     if (message.substr(0, 1) !== "-" && message.substr(0, 1) !== "/") { return }
@@ -453,12 +456,12 @@ register("worldLoad",()=>{
                     message = message.substr(1, message.length - 1)
                     let args = message.split(" ")
                     let command = args[0]
-    
+
                     ranCommandNonGuild(player, "msg " + player, command, args)
-    
+
                 }).setChatCriteria("&dFrom &r${player}&r&7: &r&7${message}&r")//&dFrom &r&b[MVP&r&d+&r&b] VoomDilles&r&7: &r&7/google Boobs&r
-    
-    
+
+
                 function ranCommandNonGuild(player, responceCommand, command, args) {
                     new Thread(() => {
                         if (commandFunctionsNonGuild[command] == undefined) {
@@ -473,9 +476,9 @@ register("worldLoad",()=>{
                         }
                     }).start()
                 }
-                
+
                 // commandFunctionsNonGuild.getbot = function(player, chatCommand, command, args) {
-    
+
                 //     let bot = []
                 //     let leftBots = fragrunbots
                 //     for(let i = 0;i<Math.min(10,parseInt(args[1] || "1"));i++){
@@ -492,14 +495,14 @@ register("worldLoad",()=>{
                 //         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", There are no online fragbots!"))
                 //     }
                 // }
-                commandFunctionsNonGuild.whatdoing = function(player, chatCommand, command, args) {
+                commandFunctionsNonGuild.whatdoing = function (player, chatCommand, command, args) {
                     let playerCheck = args[1] || player
-    
+
                     let res = ""
-                    
+
                     let playerData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=player?name=" + playerCheck.replace("_", "^")))
                     let playerUUID = ""
-    
+
                     if (!playerData.success) {
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data: " + playerData.reason))
                         return;
@@ -508,16 +511,16 @@ register("worldLoad",()=>{
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data! (PlayerData)"))
                         return;
                     }
-    
+
                     if (playerData.data.player == null) {
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data (Invalid player?)"))
                         return;
                     }
-    
+
                     playerUUID = playerData.data.player.uuid
-                    
+
                     let skyblockData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=skyblock_profiles?uuid=" + playerUUID))
-    
+
                     if (!skyblockData.success) {
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data: " + skyblockData.reason))
                         return;
@@ -526,9 +529,9 @@ register("worldLoad",()=>{
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data! (SbData)"))
                         return;
                     }
-    
+
                     let last_save = 0
-    
+
                     let playerProfile = skyblockData.data?.profiles[0] || {}
                     skyblockData.data.profiles.forEach((profile) => {
                         if (profile.members[playerUUID].last_save > last_save) {
@@ -537,65 +540,65 @@ register("worldLoad",()=>{
                         }
                     })
                     let playerProf = playerProfile.members[playerUUID]
-    
+
                     let statusData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=status?uuid=" + playerUUID))
-    
-                    if(statusData.data.session.online){
-                        if(statusData.data.session.gameType === "SKYBLOCK"){
-                            switch(statusData.data.session.mode){
+
+                    if (statusData.data.session.online) {
+                        if (statusData.data.session.gameType === "SKYBLOCK") {
+                            switch (statusData.data.session.mode) {
                                 case "combat_1":
-                                    if(playerProf?.slayer_quest?.type === "spider"){
-                                        res = `doing t${playerProf.slayer_quest.tier+1} tarantulas`
+                                    if (playerProf?.slayer_quest?.type === "spider") {
+                                        res = `doing t${playerProf.slayer_quest.tier + 1} tarantulas`
                                         break;
                                     }
-                                    case "hub":
-                                        if(playerProf?.slayer_quest?.type === "wolf"){
-                                            res = `doing t${playerProf.slayer_quest.tier+1} svens (at the hub)`
-                                            break;
-                                        }
-                                        if(playerProf?.slayer_quest?.type === "zombie"){
-                                            res = `doing t${playerProf.slayer_quest.tier+1} revs`
-                                            break;
-                                        }
+                                case "hub":
+                                    if (playerProf?.slayer_quest?.type === "wolf") {
+                                        res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the hub)`
+                                        break;
+                                    }
+                                    if (playerProf?.slayer_quest?.type === "zombie") {
+                                        res = `doing t${playerProf.slayer_quest.tier + 1} revs`
+                                        break;
+                                    }
                                 case "foraging_1":
-                                    if(playerProf?.slayer_quest?.type === "wolf"){
-                                        res = `doing t${playerProf.slayer_quest.tier+1} svens (at the park)`
+                                    if (playerProf?.slayer_quest?.type === "wolf") {
+                                        res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the park)`
                                         break;
                                     }
                                 default:
-                                    res = "playing " + statusData.data.session.gameType + " (" + (areaData[statusData.data.session.mode]?areaData[statusData.data.session.mode].Display || (statusData.data.session.mode):statusData.data.session.mode) + ")"
-                                break;
+                                    res = "playing " + statusData.data.session.gameType + " (" + (areaData[statusData.data.session.mode] ? areaData[statusData.data.session.mode].Display || (statusData.data.session.mode) : statusData.data.session.mode) + ")"
+                                    break;
                             }
-                        }else{
+                        } else {
                             res = "playing " + statusData.data.session.gameType + " " + statusData.data.session.mode
                         }
-                    }else{
+                    } else {
                         res = "offline"
                     }
-    
+
                     commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", " + playerCheck + " is currently " + res))
                 }
-                commandFunctionsNonGuild.math = function(player, chatCommand, command, args) {
-                    if(args === undefined){
+                commandFunctionsNonGuild.math = function (player, chatCommand, command, args) {
+                    if (args === undefined) {
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", invalid equasion!"))
                     }
-    
+
                     args.shift()
-                    
+
                     let res;
-                    try{
+                    try {
                         res = FileLib.getUrlContent("http://api.mathjs.org/v4/?expr=" + encodeURIComponent(args.join(" ")))
-                    }catch(e){
-                        res = mathBad[Math.floor(Math.random()*mathBad.length)]
+                    } catch (e) {
+                        res = mathBad[Math.floor(Math.random() * mathBad.length)]
                     }
-    
-                    if(/[0-9]\.?[0-9]*e\+[0-9]+/.test(res)){
+
+                    if (/[0-9]\.?[0-9]*e\+[0-9]+/.test(res)) {
                         res = numberWithCommas(parseFloat(res))
                     }
-    
+
                     commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + res))
                 }
-                commandFunctions.google = function(player, command, args, reply) {
+                commandFunctions.google = function (player, command, args, reply) {
                     if (args[1] == undefined) {
                         if (commandsSpeed > commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot enter question!"))
@@ -604,21 +607,21 @@ register("worldLoad",()=>{
                         }
                         return;
                     }
-    
+
                     let question = ""
                     let first = true
-    
-                    args.forEach((a)=>{
-                        if(!first){
-                            question += (question===""?"":" ") + a
+
+                    args.forEach((a) => {
+                        if (!first) {
+                            question += (question === "" ? "" : " ") + a
                         }
                         first = false
                     })
-    
+
                     let reset
-                    try{
-                        res = FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/googleResult.json?i=" + encodeURIComponent(question)).replace("Wolfram|Alpha did not understand your input","there was an error with your question!")
-                    }catch(e){
+                    try {
+                        res = FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/googleResult.json?i=" + encodeURIComponent(question)).replace("Wolfram|Alpha did not understand your input", "there was an error with your question!")
+                    } catch (e) {
                         if (commandsSpeed > commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot there was an error with your question!"))
                         } else {
@@ -626,18 +629,18 @@ register("worldLoad",()=>{
                         }
                         return;
                     }
-    
+
                     let responce = [""]
-    
-                    res.split(" ").forEach((a)=>{
-                        if((responce[responce.length-1] + a).length > 150){
+
+                    res.split(" ").forEach((a) => {
+                        if ((responce[responce.length - 1] + a).length > 150) {
                             responce.push(a)
-                        }else{
-                            responce[responce.length-1] += " " + a
+                        } else {
+                            responce[responce.length - 1] += " " + a
                         }
                     })
-    
-                    responce.forEach((a)=>{
+
+                    responce.forEach((a) => {
                         if (commandsSpeed > commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + a))
                         } else {
@@ -645,11 +648,11 @@ register("worldLoad",()=>{
                         }
                     })
                 }
-                commandFunctions.question = function(player, command, args, reply) {
+                commandFunctions.question = function (player, command, args, reply) {
                     if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + ((args.join().length%2)===1?"yes":"no") + "!"))
+                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + ((args.join().length % 2) === 1 ? "yes" : "no") + "!"))
                     } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + ((args.join().length%2)===1?"yes":"no") + "!"))
+                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + ((args.join().length % 2) === 1 ? "yes" : "no") + "!"))
                     }
                 }
                 //
@@ -659,15 +662,15 @@ register("worldLoad",()=>{
                 //     }else{
                 //         args[1] = parseFloat(args[1])
                 //     }
-        
+
                 //     if (commandsSpeed > commandsSpeedLimit) {
                 //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Fetchur is currently " + (data?data:"Unknown") + "."))
                 //     } else {
                 //         commandQueue.dm.push(spamBypass("/gc @" + player + ", Fetchur is currently " + (data?data:"Unknown") + "."))
                 //     }
                 // }
-                
-                commandFunctionsNonGuild.joke = function(player, chatCommand, command, args) {
+
+                commandFunctionsNonGuild.joke = function (player, chatCommand, command, args) {
                     if (args[1] == "player") {
                         if (args[2] == undefined) {
                             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.value.joke))
@@ -681,7 +684,7 @@ register("worldLoad",()=>{
                         return;
                     }
 
-                    if(Math.random() < 0.05){
+                    if (Math.random() < 0.05) {
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Here is the funniest joke i know..."))
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + player))
                         return
@@ -690,138 +693,138 @@ register("worldLoad",()=>{
                     commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.data.setup))
                     commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.data.punchline))
                 }
-                
-                commandFunctionsNonGuild.soopyaddons = function(player, chatCommand, command, args) {
+
+                commandFunctionsNonGuild.soopyaddons = function (player, chatCommand, command, args) {
                     commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", CT is Pepega"))
                 }
-                
-                commandFunctionsNonGuild.scammercheck = function(player, chatCommand, command, args) {
-                if (args[1] === undefined) {
-                    args[1] = player
-                }
-    
-                let playerUUID;
-                try{
-                    playerUUID = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + args[1])).id
-                }catch(e){
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Invalid player"))
-                        return;
-                    }
-                let isScammer = scammerData[playerUUID] !== undefined
-    
-                if(!isScammer){
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (player.toLowerCase()===args[1].toLowerCase()?"You are":args[1]+" is") + " not a scammer"))
-                }else{
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", "+ (player.toLowerCase()===args[1].toLowerCase()?"You are":args[1]+" is") + " a scammer"))
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Reason: " + scammerData[playerUUID].reason))
-                }
-            }
-            commandFunctionsNonGuild.missingpets = function(player, chatCommand, command, args) {
-                if (args[1] === undefined) {
-                    args[1] = player
-                }
-    
-                let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
-    
-                let profile = ""
-                Object.keys(data.profiles).forEach((profileId) => {
-                    if (data.profiles[profileId].current) {
-                        profile = profileId
-                    }
-                })
-    
-                let missingPets = data.profiles[profile].data.missingPets
-    
-                commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", "+ (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingPets.length + " pets!"))
-                if(missingPets.length > 0){
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", ("+ missingPets.slice(0, 5).map(pet => pet.display_name).join(" | ") + (missingPets.length > 5?" | and " + (missingPets.length-5) + " more":"") +  ")"))
-                }
-            }
-            commandFunctionsNonGuild.fetchur = function(player, chatCommand, command, args) {
-    
-                let fletcherMessages2 = [
-                    "50 red wool",
-                    "20 yellow stained glass",
-                    "1 compass",
-                    "20 mythril",
-                    "1 firework rocket",
-                    "1 cheap coffee or decent coffee",
-                    "1 wooden door",
-                    "3 rabbits feet",
-                    "1 superboom tnt",
-                    "1 pumpkin",
-                    "1 flint and steel",
-                    "50 nether quartz ore",
-                    "16 ender pearl"
-                ]
-                let currFetchur = (fletcherMessages2[(new Date(Date.now()-5*60*60*1000+new Date().getTimezoneOffset()*1000*60).getDate())%fletcherMessages2.length-1]) || fletcherMessages2[0]
-                let willChangeIn = (1000*60*60*24)-((Date.now() - 1613624400000)%(1000*60*60*24))
-                let changeH = Math.floor(willChangeIn/(1000*60*60))
-                let changeM = Math.floor(willChangeIn%(1000*60*60)/1000/60)
-                let willChangeInText = changeH + " hour" + (changeH=== 1?"":"s") + " " + changeM + " min" + (changeM=== 1?"":"s")
-                let nextFetchur = (fletcherMessages2[(new Date(Date.now()-5*60*60*1000+new Date().getTimezoneOffset()*1000*60+(1000*60*60*24)).getDate())%fletcherMessages2.length-1]) || fletcherMessages2[0]
-                commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
-            }
-            commandFunctionsNonGuild.google = function(player, chatCommand, command, args) {
-                if (args[1] == undefined) {
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", enter question!"))
-                    return;
-                }
-    
-                let question = ""
-                let first = true
-    
-                args.forEach((a)=>{
-                    if(!first){
-                        question += (question===""?"":" ") + a
-                    }
-                    first = false
-                })
-    
-                let reset
-                try{
-                    res = FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/googleResult.json?i=" + encodeURIComponent(question)).replace("Wolfram|Alpha did not understand your input","there was an error with your question!")
-                }catch(e){
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error with your question!"))
-                    return;
-                }
-    
-                let responce = [""]
-    
-                res.split(" ").forEach((a)=>{
-                    if((responce[responce.length-1] + a).length > 150){
-                        responce.push(a)
-                    }else{
-                        responce[responce.length-1] += " " + a
-                    }
-                })
-    
-                responce.forEach((a)=>{
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " +a))
-                })
-            }
-            
-                commandFunctionsNonGuild.networth = function(player, chatCommand, command, args) {
+
+                commandFunctionsNonGuild.scammercheck = function (player, chatCommand, command, args) {
                     if (args[1] === undefined) {
                         args[1] = player
                     }
-        
+
+                    let playerUUID;
+                    try {
+                        playerUUID = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + args[1])).id
+                    } catch (e) {
+                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Invalid player"))
+                        return;
+                    }
+                    let isScammer = scammerData[playerUUID] !== undefined
+
+                    if (!isScammer) {
+                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " not a scammer"))
+                    } else {
+                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " a scammer"))
+                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Reason: " + scammerData[playerUUID].reason))
+                    }
+                }
+                commandFunctionsNonGuild.missingpets = function (player, chatCommand, command, args) {
+                    if (args[1] === undefined) {
+                        args[1] = player
+                    }
+
+                    let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
+
+                    let profile = ""
+                    Object.keys(data.profiles).forEach((profileId) => {
+                        if (data.profiles[profileId].current) {
+                            profile = profileId
+                        }
+                    })
+
+                    let missingPets = data.profiles[profile].data.missingPets
+
+                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingPets.length + " pets!"))
+                    if (missingPets.length > 0) {
+                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", (" + missingPets.slice(0, 5).map(pet => pet.display_name).join(" | ") + (missingPets.length > 5 ? " | and " + (missingPets.length - 5) + " more" : "") + ")"))
+                    }
+                }
+                commandFunctionsNonGuild.fetchur = function (player, chatCommand, command, args) {
+
+                    let fletcherMessages2 = [
+                        "50 red wool",
+                        "20 yellow stained glass",
+                        "1 compass",
+                        "20 mythril",
+                        "1 firework rocket",
+                        "1 cheap coffee or decent coffee",
+                        "1 wooden door",
+                        "3 rabbits feet",
+                        "1 superboom tnt",
+                        "1 pumpkin",
+                        "1 flint and steel",
+                        "50 nether quartz ore",
+                        "16 ender pearl"
+                    ]
+                    let currFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
+                    let willChangeIn = (1000 * 60 * 60 * 24) - ((Date.now() - 1613624400000) % (1000 * 60 * 60 * 24))
+                    let changeH = Math.floor(willChangeIn / (1000 * 60 * 60))
+                    let changeM = Math.floor(willChangeIn % (1000 * 60 * 60) / 1000 / 60)
+                    let willChangeInText = changeH + " hour" + (changeH === 1 ? "" : "s") + " " + changeM + " min" + (changeM === 1 ? "" : "s")
+                    let nextFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60 + (1000 * 60 * 60 * 24)).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
+                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
+                }
+                commandFunctionsNonGuild.google = function (player, chatCommand, command, args) {
+                    if (args[1] == undefined) {
+                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", enter question!"))
+                        return;
+                    }
+
+                    let question = ""
+                    let first = true
+
+                    args.forEach((a) => {
+                        if (!first) {
+                            question += (question === "" ? "" : " ") + a
+                        }
+                        first = false
+                    })
+
+                    let reset
+                    try {
+                        res = FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/googleResult.json?i=" + encodeURIComponent(question)).replace("Wolfram|Alpha did not understand your input", "there was an error with your question!")
+                    } catch (e) {
+                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error with your question!"))
+                        return;
+                    }
+
+                    let responce = [""]
+
+                    res.split(" ").forEach((a) => {
+                        if ((responce[responce.length - 1] + a).length > 150) {
+                            responce.push(a)
+                        } else {
+                            responce[responce.length - 1] += " " + a
+                        }
+                    })
+
+                    responce.forEach((a) => {
+                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + a))
+                    })
+                }
+
+                commandFunctionsNonGuild.networth = function (player, chatCommand, command, args) {
+                    if (args[1] === undefined) {
+                        args[1] = player
+                    }
+
                     let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
                     try {
                         let netWorth = 0
                         let netWorthLast = 0
-        
-        
+
+
                         function worthChangeVerift() {
                             if (netWorth.toString() === "NaN" || netWorth.toString() === "undefined") {
                                 netWorth = netWorthLast
                             }
                             netWorthLast = netWorth
                         }
-        
+
                         let items = []
                         let pets = []
-        
+
                         Object.keys(data.profiles).forEach((profId) => {
                             let itemStorage = ["wardrobe_inventory", "inventory", "enderchest", "talisman_bag", "fishing_bag", "quiver", "potion_bag", "storage"]
                             let itemStorageReplace = {
@@ -837,7 +840,7 @@ register("worldLoad",()=>{
                             itemStorage.forEach((itemLocation) => {
                                 data.profiles[profId].items[itemLocation].forEach((item) => {
                                     if (args[2] === undefined || args[2].toLowerCase() === itemLocation || itemStorageReplace[args[2].toLowerCase()] === itemLocation) {
-                                        items.push({...item, "location": itemLocation })
+                                        items.push({ ...item, "location": itemLocation })
                                     }
                                 })
                             })
@@ -846,7 +849,7 @@ register("worldLoad",()=>{
                                     pets.push(pet)
                                 })
                             }
-        
+
                             if (args[2] === undefined) {
                                 netWorth += data.profiles[profId].raw.coin_purse
                                 worthChangeVerift()
@@ -866,21 +869,21 @@ register("worldLoad",()=>{
                             netWorth += getPetWorth(pet)
                             worthChangeVerift()
                         })
-        
-        
+
+
                         netWorth = addNotation("oneLetters", netWorth)
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", " + (args[1] === player ? "You have" : args[1] + " has") + " a networth of $" + netWorth + "!"))
-    
-        
+
+
                     } catch (e) {
                         console.log(JSON.stringify(e))
-                            commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error!"))
+                        commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error!"))
                     }
                 }
-    
-                commandFunctionsNonGuild.lowestbin = function(player, chatCommand, command, args) {
+
+                commandFunctionsNonGuild.lowestbin = function (player, chatCommand, command, args) {
                     let vals = {}
-    
+
                     args.forEach((arg) => {
                         if (arg == "lowestbin") {
                             return;
@@ -889,60 +892,60 @@ register("worldLoad",()=>{
                             if (lowestBin.toLowerCase().includes(arg.toLowerCase())) {
                                 if (vals[lowestBin] == undefined) { vals[lowestBin] = 0 }
                                 vals[lowestBin]++
-                                    if (lowestBin.includes("STARRED")) {
-                                        vals[lowestBin] -= 0.1
-                                    }
+                                if (lowestBin.includes("STARRED")) {
+                                    vals[lowestBin] -= 0.1
+                                }
                             }
                         })
                     })
-    
+
                     let topItem = undefined
                     let topScore = 0;
-    
+
                     Object.keys(vals).forEach((val) => {
                         if (vals[val] > topScore) {
                             topItem = val
                             topScore = vals[val]
                         }
                     })
-    
+
                     if (topItem === undefined) {
                         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", no auctions found!"))
                         return;
                     }
-    
+
                     let itemName = topItem.replace(/_/g, " ").toLowerCase()
                     itemName = itemName.substr(0, 1).toUpperCase() + itemName.substr(1)
-    
+
                     commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", Cheapest bin for " + itemName + " is " + numberWithCommas(lowestBins[topItem]) + "!"))
-    
+
                 }
-                commandFunctionsNonGuild.talismans = function(player, chatCommand, command, args) {
+                commandFunctionsNonGuild.talismans = function (player, chatCommand, command, args) {
                     let playerScan = player
                     if (args[1] !== undefined) {
                         playerScan = args[1]
                     }
-        
+
                     let stats1 = JSON.parse(FileLib.getUrlContent("https://api.slothpixel.me/api/players/" + playerScan))
                     if (stats1.error === "Player does not exist") {
                         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid player!"))
                         return;
                     }
                     let stats = JSON.parse(FileLib.getUrlContent("https://api.slothpixel.me/api/skyblock/profile/" + playerScan))
-        
+
                     let talisData = {}
-        
+
                     let messageGChat = ""
-        
+
                     try {
                         let uuid = stats1.uuid
                         let playerName = stats1.username
-        
+
                         let talisData = stats.members[uuid].talisman_bag
-        
+
                         let totalTalis = 0
                         let totalRecombedTalis = 0
-        
+
                         talisData.forEach((talis) => {
                             if (talis.attributes === undefined) {
                                 return;
@@ -950,17 +953,17 @@ register("worldLoad",()=>{
                             totalTalis++
                             totalRecombedTalis += talis.attributes.rarity_upgrades == 1 ? 1 : 0
                         })
-        
+
                         messageGChat = playerName + " has a total of " + totalTalis + " talismans (" + totalRecombedTalis + " recombed)"
                     } catch (err) {
                         console.log(JSON.stringify(err))
                         messageGChat = "There was a error :("
                     }
-        
+
                     commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + messageGChat))
-        
+
                 }
-                commandFunctionsNonGuild.skill = function(player, chatCommand, command, args) {
+                commandFunctionsNonGuild.skill = function (player, chatCommand, command, args) {
                     if (args[1] === undefined || args[2] === undefined) {
                         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", requires 2 arguments!"))
                         return;
@@ -972,36 +975,36 @@ register("worldLoad",()=>{
                     if (skillReplace[args[1]] !== undefined) {
                         args[1] = skillReplace[args[1]]
                     }
-        
+
                     if (skillData.collections[args[1].toUpperCase()] === undefined) {
                         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill type!"))
                         return;
                     }
-        
+
                     args[2] = parseInt(args[2]) - 1
-        
-        
+
+
                     if (args[3] !== undefined) {
                         args[3] = parseInt(args[3]) - 1
-        
+
                         if (skillData.collections[args[1].toUpperCase()].levels[args[3]] === undefined) {
                             commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill level!"))
                             return;
                         }
-        
+
                         let needExp = 0
                         if (args[2] === -1) {
                             needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired)
                         } else {
-        
+
                             if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
                                 commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill level!"))
                                 return;
                             }
                             needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired - skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired)
                         }
-        
-        
+
+
                         let expinfo = "it takes " + needExp + " exp to go from " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " -> " + (args[3] + 1)
                         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + expinfo))
                         return;
@@ -1010,16 +1013,16 @@ register("worldLoad",()=>{
                         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill level!"))
                         return;
                     }
-        
+
                     Thread.sleep(500)
-        
+
                     commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " (" + addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired) + " exp)"))
                     skillData.collections[args[1].toUpperCase()].levels[args[2]].unlocks.forEach((unlock) => {
                         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + unlock))
                     })
                 }
-                commandFunctionsNonGuild.help = function(player, chatCommand, command, args) {
-    
+                commandFunctionsNonGuild.help = function (player, chatCommand, command, args) {
+
                     if (args[1] === undefined) {
                         commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Possible commands are:"))
                         Object.keys(commandFunctionsNonGuild).forEach((commandF) => {
@@ -1028,52 +1031,125 @@ register("worldLoad",()=>{
                     } else {
                         switch (args[1]) {
                             // case "aliases":
-    
+
                             //     commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot Command aliases "))
                             //     Object.keys(commandAlias).forEach((alias) => {
                             //         commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot " + alias + " runs " + commandAlias[alias]))
                             //     })
                             //     break;
-    
+
                             default:
-    
+
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot Help for command " + args[1]))
-                            break;
+                                break;
                         }
                     }
                 }
             }
-    
-            commandFunctions.scammercheck = function(player, command, args, reply) {
+
+            commandFunctions.scammercheck = function (player, command, args, reply) {
                 if (args[1] === undefined) {
                     args[1] = player
                 }
-    
+
                 let playerUUID = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + args[1])).id
-    
+
                 let isScammer = scammerData[playerUUID] !== undefined
-    
-                if(!isScammer){
+
+                if (!isScammer) {
                     if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot "+ (player.toLowerCase()===args[1].toLowerCase()?"You are":args[1]+" is") + " not a scammer"))
+                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " not a scammer"))
                     } else {
-                        commandQueue.dm.push(spamBypass("/gc @" + player + ", " + (player.toLowerCase()===args[1].toLowerCase()?"You are":args[1]+" is") + " not a scammer"))
+                        commandQueue.dm.push(spamBypass("/gc @" + player + ", " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " not a scammer"))
                     }
-                }else{
+                } else {
                     if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " +(player.toLowerCase()===args[1].toLowerCase()?"You are":args[1]+" is") + " a scammer"))
+                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " a scammer"))
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Reason: " + scammerData[playerUUID].reason))
                     } else {
-                        commandQueue.dm.push(spamBypass("/gc @" + player + ", "+ (player.toLowerCase()===args[1].toLowerCase()?"You are":args[1]+" is") + " a scammer"))
+                        commandQueue.dm.push(spamBypass("/gc @" + player + ", " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " a scammer"))
                         commandQueue.dm.push(spamBypass("/gc @" + player + ", Reason: " + scammerData[playerUUID].reason))
                     }
                 }
             }
-            commandFunctions.whatdropnext = function(player, command, args, reply){
+            commandFunctions.nextdrag = function(player, command, args, reply){
+
+                let number = Math.max(1, Math.min(10000,parseInt(args[1]))) || 1
+                
+                let chosenArr = [
+                    {
+                        name: "Protector Dragon",
+                        chance: 4
+                    },
+                    {
+                        name: "Wise Dragon",
+                        chance: 4
+                    },
+                    {
+                        name: "Young Dragon",
+                        chance: 4
+                    },
+                    {
+                        name: "Strong Dragon",
+                        chance: 4
+                    },
+                    {
+                        name: "Old Dragon",
+                        chance: 4
+                    },
+                    {
+                        name: "Unstable Dragon",
+                        chance: 4
+                    },
+                    {
+                        name: "Superior Dragon",
+                        chance: 1
+                    }
+                ]
+
+                let arrTotal = chosenArr.reduce((total, item) => total + item.chance, 0)
+                // console.log(arrTotal)
+                let items = {}
+
+                for(let i = 0;i<number;i++){
+                    let randomNumber = Math.random()
+
+                    let itemChosen = chosenArr[chosenArr.length-1].name
+                    let chosen = false
+                    chosenArr.forEach(item=>{
+                        if(chosen) return
+                        // console.log(item.name, randomNumber, item.chance, arrTotal, item.chance/arrTotal)
+                        if(randomNumber<=item.chance/arrTotal){
+                            itemChosen = item.name
+                            chosen = true
+                            return
+                        }
+                        randomNumber -= item.chance/arrTotal
+                    })
+
+                    if(!items[itemChosen]) items[itemChosen] = 0
+
+                    items[itemChosen]++
+                }
+                if(number === 1){
+                    reply(Object.keys(items)[0] + "!")
+                }else{
+                    if(Object.keys(items).length > 3){
+                        if(Object.keys(items).length > 5){
+                            reply("Message too long, try with a smaller number")
+                        }else{
+                            commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + Object.keys(items).map(a=>a+" x"+items[a]).join(", ") + "!"))
+                        }
+                    }else{
+                        reply(Object.keys(items).map(a=>a+" x"+items[a]).join(", ") + "!")
+                    }
+                }
+            }
+            commandFunctions.whatdropnext = function (player, command, args, reply) {
 
                 let type = args[1] || "all"
-                let number = Math.max(1, Math.min(10000,parseInt(args[2]))) || 1
-    
+                let number = Math.max(1, Math.min(10000, parseInt(args[2]))) || 1
+
 
                 let aliases = {
                     "enderman": "eman",
@@ -1144,43 +1220,43 @@ register("worldLoad",()=>{
                 // console.log(arrTotal)
                 let items = {}
 
-                for(let i = 0;i<number;i++){
+                for (let i = 0; i < number; i++) {
                     let randomNumber = Math.random()
 
-                    let itemChosen = chosenArr[chosenArr.length-1].name
+                    let itemChosen = chosenArr[chosenArr.length - 1].name
                     let chosen = false
-                    chosenArr.forEach(item=>{
-                        if(chosen) return
+                    chosenArr.forEach(item => {
+                        if (chosen) return
                         // console.log(item.name, randomNumber, item.chance, arrTotal, item.chance/arrTotal)
-                        if(randomNumber<=item.chance/arrTotal){
+                        if (randomNumber <= item.chance / arrTotal) {
                             itemChosen = item.name
                             chosen = true
                             return
                         }
-                        randomNumber -= item.chance/arrTotal
+                        randomNumber -= item.chance / arrTotal
                     })
 
-                    if(!items[itemChosen]) items[itemChosen] = 0
+                    if (!items[itemChosen]) items[itemChosen] = 0
 
                     items[itemChosen]++
                 }
-                if(number === 1){
+                if (number === 1) {
                     reply(Object.keys(items)[0] + "!")
-                }else{
-                    if(Object.keys(items).length > 3){
-                        if(Object.keys(items).length > 5){
+                } else {
+                    if (Object.keys(items).length > 3) {
+                        if (Object.keys(items).length > 5) {
                             reply("Message too long, try with a smaller number")
-                        }else{
-                            commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + Object.keys(items).map(a=>a+" x"+items[a]).join(", ") + "!"))
+                        } else {
+                            commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + Object.keys(items).map(a => a + " x" + items[a]).join(", ") + "!"))
                         }
-                    }else{
-                        reply(Object.keys(items).map(a=>a+" x"+items[a]).join(", ") + "!")
+                    } else {
+                        reply(Object.keys(items).map(a => a + " x" + items[a]).join(", ") + "!")
                     }
                 }
             }
-            commandFunctions.createpoll = function(player, command, args, reply) {
+            commandFunctions.createpoll = function (player, command, args, reply) {
                 args.shift()
-    
+
                 if (player !== "Soopyboo32" && player !== "vNoxus" && player !== "alon1396" && player !== "Leyrox" && player !== "Flarely") {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot you do not have permission to perform this command!"))
@@ -1189,25 +1265,25 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
-                args = args.join(" ").split("/").map(a=>a.trim())
+
+                args = args.join(" ").split("/").map(a => a.trim())
                 let name = args.shift()
-    
-                if(args.length > 1){
+
+                if (args.length > 1) {
                     commandQueue.other.push(spamBypass("/gc @everyone, POLL CREATED! (Ends in 1m)"))
                     commandQueue.other.push(spamBypass("/gc @everyone, USE /ans [answernumber] to answer"))
                     let i = 0
-                    commandQueue.other.push(spamBypass("/gc @everyone, Possible answers are: " + args.map((a)=>{
+                    commandQueue.other.push(spamBypass("/gc @everyone, Possible answers are: " + args.map((a) => {
                         i++
                         return i + ": " + a
                     }).join(" | ")))
-    
+
                     pollName = name
                     pollArgs = args
                     pollTime = Date.now()
                     pollAnswers = {}
                     return;
-                }else{
+                } else {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot min of 2 options!"))
                     } else {
@@ -1216,7 +1292,7 @@ register("worldLoad",()=>{
                     return;
                 }
             }
-            commandFunctions.cancelpoll = function(player, command, args, reply) {
+            commandFunctions.cancelpoll = function (player, command, args, reply) {
                 if (player !== "Soopyboo32" && player !== "vNoxus" && player !== "alon1396" && player !== "Leyrox" && player !== "Flarely") {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot you do not have permission to perform this command!"))
@@ -1225,25 +1301,25 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 pollTime = undefined
-    
-                    
+
+
                 commandQueue.other.push(spamBypass("/gc @everyone, POLL ENDED! (" + pollName + ")"));
                 let i = 0
-                commandQueue.other.push(spamBypass("/gc @everyone, Results: " + pollArgs.map((a)=>{
+                commandQueue.other.push(spamBypass("/gc @everyone, Results: " + pollArgs.map((a) => {
                     i++
-                    return a + ": " + Object.values(pollAnswers).filter(a=>a===i).length + " (" + Math.round(Object.values(pollAnswers).filter(a=>a===i).length/Object.values(pollAnswers).length*100) + "%)"
+                    return a + ": " + Object.values(pollAnswers).filter(a => a === i).length + " (" + Math.round(Object.values(pollAnswers).filter(a => a === i).length / Object.values(pollAnswers).length * 100) + "%)"
                 }).join(" | ")))
-    
+
                 pollName = undefined
                 pollArgs = undefined
                 pollTime = 0
                 pollAnswers = {}
                 return;
             }
-            commandFunctions.answer = function(player, command, args, reply) {
-                if(!pollTime){
+            commandFunctions.answer = function (player, command, args, reply) {
+                if (!pollTime) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot There is no running poll!"))
                     } else {
@@ -1251,21 +1327,21 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 let answer = parseInt(args[1])
-    
-                if(answer){
-                    if(pollAnswers[player] === undefined){
-                        if(pollArgs.length >= answer){
+
+                if (answer) {
+                    if (pollAnswers[player] === undefined) {
+                        if (pollArgs.length >= answer) {
                             pollAnswers[player] = answer
-    
+
                             if (commandsSpeed > commandsSpeedLimit) {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Registered vote!"))
                             } else {
                                 commandQueue.other.push(spamBypass("/gc @" + player + ", Registered vote!"))
                             }
                             return;
-                        }else{
+                        } else {
                             if (commandsSpeed > commandsSpeedLimit) {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid answer!"))
                             } else {
@@ -1273,7 +1349,7 @@ register("worldLoad",()=>{
                             }
                             return;
                         }
-                    }else{
+                    } else {
                         if (commandsSpeed > commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot You have already voted in this poll!"))
                         } else {
@@ -1281,7 +1357,7 @@ register("worldLoad",()=>{
                         }
                         return;
                     }
-                }else{
+                } else {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid answer!"))
                     } else {
@@ -1290,26 +1366,26 @@ register("worldLoad",()=>{
                     return;
                 }
             }
-            register("tick",()=>{
-                if(!pollTime) return;
-                if(Date.now() > pollTime + 1000*60){
+            register("tick", () => {
+                if (!pollTime) return;
+                if (Date.now() > pollTime + 1000 * 60) {
                     pollTime = undefined
-    
-                    
+
+
                     commandQueue.other.push(spamBypass("/gc @everyone, POLL ENDED! (" + pollName + ")"));
                     let i = 0
-                    commandQueue.other.push(spamBypass("/gc @everyone, Results: " + pollArgs.map((a)=>{
+                    commandQueue.other.push(spamBypass("/gc @everyone, Results: " + pollArgs.map((a) => {
                         i++
-                        return a + ": " + Object.values(pollAnswers).filter(a=>a===i).length + " (" + Math.round(Object.values(pollAnswers).filter(a=>a===i).length/Object.values(pollAnswers).length*100) + "%)"
+                        return a + ": " + Object.values(pollAnswers).filter(a => a === i).length + " (" + Math.round(Object.values(pollAnswers).filter(a => a === i).length / Object.values(pollAnswers).length * 100) + "%)"
                     }).join(" | ")))
-    
+
                     pollName = undefined
                     pollArgs = undefined
                     pollTime = 0
                     pollAnswers = {}
                 }
             })
-            commandFunctions.fetchur = function(player, command, args, reply) {
+            commandFunctions.fetchur = function (player, command, args, reply) {
                 let fletcherMessages2 = [
                     "50 red wool",
                     "20 yellow stained glass",
@@ -1325,33 +1401,33 @@ register("worldLoad",()=>{
                     "50 nether quartz ore",
                     "16 ender pearl"
                 ]
-                let currFetchur = (fletcherMessages2[(new Date(Date.now()-5*60*60*1000+new Date().getTimezoneOffset()*1000*60).getDate())%fletcherMessages2.length-1]) || fletcherMessages2[0]
-                let willChangeIn = (1000*60*60*24)-((Date.now() - 1613624400000)%(1000*60*60*24))
-                let changeH = Math.floor(willChangeIn/(1000*60*60))
-                let changeM = Math.floor(willChangeIn%(1000*60*60)/1000/60)
-                let willChangeInText = changeH + " hour" + (changeH=== 1?"":"s") + " " + changeM + " min" + (changeM=== 1?"":"s")
-                let nextFetchur = (fletcherMessages2[(new Date(Date.now()-5*60*60*1000+new Date().getTimezoneOffset()*1000*60+(1000*60*60*24)).getDate())%fletcherMessages2.length-1]) || fletcherMessages2[0]
+                let currFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
+                let willChangeIn = (1000 * 60 * 60 * 24) - ((Date.now() - 1613624400000) % (1000 * 60 * 60 * 24))
+                let changeH = Math.floor(willChangeIn / (1000 * 60 * 60))
+                let changeM = Math.floor(willChangeIn % (1000 * 60 * 60) / 1000 / 60)
+                let willChangeInText = changeH + " hour" + (changeH === 1 ? "" : "s") + " " + changeM + " min" + (changeM === 1 ? "" : "s")
+                let nextFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60 + (1000 * 60 * 60 * 24)).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
                 } else {
                     commandQueue.dm.push(spamBypass("/gc @" + player + ", Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
                 }
             }
-    
-            commandFunctions.stats = function(player, command, args, reply) {
+
+            commandFunctions.stats = function (player, command, args, reply) {
                 if (args[1] === undefined) {
                     args[1] = player
                 }
                 if (commandsSpeed > commandsSpeedLimit) {
-    
+
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", DMing you the results :)"))
                 }
-    
+
                 try {
                     let playerData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=player?name=" + args[1].replace("_", "^")))
                     let playerUUID = ""
-    
+
                     if (!playerData.success) {
                         if (commandsSpeed > commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + playerData.reason))
@@ -1368,7 +1444,7 @@ register("worldLoad",()=>{
                         }
                         return;
                     }
-    
+
                     if (playerData.data.player == null) {
                         if (commandsSpeed > commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data (Invalid player?)"))
@@ -1377,12 +1453,12 @@ register("worldLoad",()=>{
                         }
                         return;
                     }
-    
+
                     playerUUID = playerData.data.player.uuid
-    
+
                     try {
                         let skyblockData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=skyblock_profiles?uuid=" + playerUUID))
-    
+
                         if (!skyblockData.success) {
                             if (commandsSpeed > commandsSpeedLimit) {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + skyblockData.reason))
@@ -1407,9 +1483,9 @@ register("worldLoad",()=>{
                             }
                             return;
                         }
-    
+
                         let last_save = 0
-    
+
                         let playerProfile = skyblockData.data.profiles[0]
                         skyblockData.data.profiles.forEach((profile) => {
                             if (profile.members[playerUUID].last_save > last_save) {
@@ -1418,9 +1494,9 @@ register("worldLoad",()=>{
                             }
                         })
                         let playerProf = playerProfile.members[playerUUID]
-    
+
                         //let book = new Book(playerProf.player.rank_formatted + " " + playerProf.player.username + "&r&7's skyblock stats")
-    
+
                         let skillApiOff = false;
                         let slayerApiOff = false;
                         let bankApiOff = false;
@@ -1434,13 +1510,13 @@ register("worldLoad",()=>{
                         let petText = "NONE";
                         let petHover = "&aPets\n\n&r";
                         let bankHover = "&aRecent transactions\n\n&r";
-    
+
                         if (playerProfile.banking == null) {
                             bankApiOff = true
                             bankHover = "&cAPI OFF";
                         } else {
                             playerBankCoins = playerProfile.banking.balance
-    
+
                             playerProfile.banking.transactions.reverse()
                             for (let i = 0; i < Math.min(10, playerProfile.banking.transactions.length); i++) {
                                 bankHover += playerProfile.banking.transactions[i].action === "DEPOSIT" ? "&a+" : "&c-"
@@ -1455,7 +1531,7 @@ register("worldLoad",()=>{
                             bankHover = bankHover.replace("olo Transfer", "Solo Transfer")
                             bankHover = bankHover.substr(0, bankHover.length - 1)
                         }
-    
+
                         let skyblockSkills = [
                             "combat",
                             "mining",
@@ -1468,23 +1544,23 @@ register("worldLoad",()=>{
                             "runecrafting",
                             "carpentry"
                         ]
-    
+
                         skyblockSkills.forEach((skill) => {
                             if (playerProf["experience_skill_" + skill] === undefined) {
                                 skillApiOff = true
                             } else {
                                 let skillEXP = playerProf["experience_skill_" + skill]
-            
+
                                 let lvlCap = skillLevelCaps["experience_skill_" + skill]
-                                if(skill === "farming"){
-                                  try{
-                                    lvlCap -= 10
-                                    lvlCap += playerProf.jacob2?.perks?.farming_level_cap || 0
-                                  }catch(e){}
+                                if (skill === "farming") {
+                                    try {
+                                        lvlCap -= 10
+                                        lvlCap += playerProf.jacob2?.perks?.farming_level_cap || 0
+                                    } catch (e) { }
                                 }
-                                
-                                let skillData = getLevelByXp(skillEXP, skill === "runecrafting" ? 1 : 0,lvlCap)
-            
+
+                                let skillData = getLevelByXp(skillEXP, skill === "runecrafting" ? 1 : 0, lvlCap)
+
                                 skillHover += "&r" + firstLetterWordCapital(skill) + ": &7" + Math.round((skillData.level + skillData.progress) * 100) / 100 + "\n&r"
                                 if (skill === "carpentry" || skill === "runecrafting") {
                                     return;
@@ -1495,29 +1571,29 @@ register("worldLoad",()=>{
                         })
                         skillHover = skillHover.substr(0, skillHover.length - 3)
                         playerSkillAvg = Math.round(playerSkillAvg * 100) / 100
-    
+
                         Object.keys(playerProf.slayer_bosses).forEach((slayer) => {
                             slayerHover += "&r&6" + firstLetterWordCapital(slayer) + "&7: &r" + numberWithCommas(playerProf.slayer_bosses[slayer].xp) + "\n&r"
-    
+
                             slayerHover += " &bSlayer level: " + Object.keys(playerProf.slayer_bosses[slayer].claimed_levels).length + "\n&r"
-    
+
                             let boss_kills_type = [
                                 0,
                                 1,
                                 2,
                                 3
                             ]
-    
+
                             boss_kills_type.forEach((tier) => {
                                 slayerHover += " - &7Kills tier " + (tier + 1) + ": " + numberWithCommas(playerProf.slayer_bosses[slayer]["boss_kills_tier_" + tier] || 0) + "\n"
                             })
                             slayerHover += "\n&r"
-    
+
                             playerTotalSlayer += playerProf.slayer_bosses[slayer].xp
                         })
                         slayerHover = slayerHover.substr(0, slayerHover.length - 3)
                         fairySouls = playerProf.fairy_souls_collected
-    
+
                         let petTierColor = {
                             "COMMON": "&f",
                             "UNCOMMON": "&a",
@@ -1532,7 +1608,7 @@ register("worldLoad",()=>{
                             "EPIC": 4,
                             "LEGENDARY": 5
                         }
-    
+
                         if (playerProf.pets.length > 0) {
                             playerProf.pets = playerProf.pets.sort((a, b) => {
                                 if (a.tier !== b.tier) {
@@ -1541,36 +1617,36 @@ register("worldLoad",()=>{
                                     return b.exp - a.exp
                                 }
                             })
-    
-    
+
+
                             for (let i = 0; i < playerProf.pets.length; i++) {
                                 if (playerProf.pets[i].heldItem == "PET_ITEM_TIER_BOOST") {
                                     playerProf.pets[i].tier = tierBoostChange[playerProf.pets[i].tier]
                                 }
                             }
-    
+
                             playerProf.pets.forEach((pet) => {
                                 if (pet.active) {
                                     petText = "[Lv" + getPetLevel(pet).level + "] " + firstLetterWordCapital(pet.type.toLowerCase().replace("_", " "))
                                 }
-    
+
                                 petHover += "&7[Lv" + getPetLevel(pet).level + "] " + petTierColor[pet.tier] + firstLetterWordCapital(pet.type.toLowerCase().replace("_", " ")) + "\n"
                             })
-    
+
                             petHover = petHover.substr(0, petHover.length - 1)
                         } else {
                             petHover = "&cNo Pets!"
                         }
-                        
+
                         let playerSkillHover
-    
+
                         if (skillApiOff) {
                             playerSkillHover = "&c" + Math.floor(getPlayerSkill(0, playerTotalSlayer) * 1.5)
                         } else {
                             playerSkillHover = "&a" + getPlayerSkill(playerTotalSkillExp, playerTotalSlayer)
                         }
-    
-    
+
+
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + playerData.data.player.displayname + "'s skyblock stats"))
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Purse Coins: " + addNotation("oneLetters", playerProf.coin_purse)))
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Bank Coins: " + (bankApiOff ? "API OFF" : addNotation("oneLetters", playerBankCoins))))
@@ -1578,51 +1654,51 @@ register("worldLoad",()=>{
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Total Slayer: " + (slayerApiOff ? "API OFF" : addNotation("oneLetters", playerTotalSlayer))))
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Fairy souls: " + numberWithCommas(fairySouls)))
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Pet: " + petText))
-    
+
                         // pagemsg.addTextComponent(
                         //     new TextComponent(ChatLib.addColor(playerData.data.player.displayname + "&7's skyblock stats"))
                         //         .setHover("show_text", ChatLib.addColor("&aPlayer skill: " + playerSkillHover))
                         // )
                         // pagemsg.addTextComponent(new TextComponent(ChatLib.addColor("\n&r")))
-    
-    
+
+
                         // pagemsg.addTextComponent(
                         //     new TextComponent(ChatLib.addColor("&3Purse Coins: &7" + addNotation("oneLetters", playerProf.coin_purse)))
                         // )
                         // pagemsg.addTextComponent(new TextComponent(ChatLib.addColor("\n&r")))
-    
+
                         // pagemsg.addTextComponent(
                         //     new TextComponent(ChatLib.addColor("&3Bank Coins: &7" + (bankApiOff ? "API OFF" : addNotation("oneLetters", playerBankCoins))))
                         //         .setHover("show_text", ChatLib.addColor(bankHover))
                         // )
                         // pagemsg.addTextComponent(new TextComponent(ChatLib.addColor("\n&r")))
-    
+
                         // pagemsg.addTextComponent(
                         //     new TextComponent(ChatLib.addColor("&3Skill Avg: &7" + (skillApiOff ? "API OFF" : playerSkillAvg)))
                         //         .setHover("show_text", ChatLib.addColor(skillHover))
                         // )
                         // pagemsg.addTextComponent(new TextComponent(ChatLib.addColor("\n&r")))
-    
+
                         // pagemsg.addTextComponent(
                         //     new TextComponent(ChatLib.addColor("&3Total Slayer: &7" + (slayerApiOff ? "API OFF" : addNotation("oneLetters", playerTotalSlayer))))
                         //         .setHover("show_text", ChatLib.addColor(slayerHover))
                         // )
                         // pagemsg.addTextComponent(new TextComponent(ChatLib.addColor("\n&r")))
-    
+
                         // pagemsg.addTextComponent(
                         //     new TextComponent(ChatLib.addColor("&3Fairy souls: &7" + numberWithCommas(fairySouls)))
                         // )
                         // pagemsg.addTextComponent(new TextComponent(ChatLib.addColor("\n&r")))
-    
+
                         // pagemsg.addTextComponent(
                         //     new TextComponent(ChatLib.addColor("&3Pet: &7" + petText))
                         //         .setHover("show_text", ChatLib.addColor(petHover))
                         // )
                         // pagemsg.addTextComponent(new TextComponent(ChatLib.addColor("\n&r")))
-    
+
                         // pagemsg.chat()
                         //book.addPage(pagemsg)
-    
+
                         //book.display()
                     } catch (err) {
                         if (commandsSpeed > commandsSpeedLimit) {
@@ -1639,13 +1715,14 @@ register("worldLoad",()=>{
                     }
                 }
             }
-            commandFunctionsStaff.guildrankschange = function(player, command, args, reply) {
-                
-                let uuid = senitherData.data.filter(e=>{
+
+            commandFunctionsStaff.guildrankschange = function (player, command, args, reply) {
+
+                let uuid = senitherData.data.filter(e => {
                     return e.username === player
                 })[0]?.uuid
 
-                if(!uuid) {
+                if (!uuid) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot could not find you on the guild leaderboard! give it up to a day to update."))
                     } else {
@@ -1654,8 +1731,8 @@ register("worldLoad",()=>{
                     return;
                 }
 
-                let rank = guildData.members.filter(f=>{
-                    return f.playerInfo.uuid===uuid.replace(/-/g,"")
+                let rank = guildData.members.filter(f => {
+                    return f.playerInfo.uuid === uuid.replace(/-/g, "")
                 })[0]?.guildInfo?.rank || "notinguildpepega";
 
                 if (rank !== "Staff" && rank !== "Guild Master") {
@@ -1666,46 +1743,46 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-                
-                let players = senitherData.data.filter(e=>{
-                    let rank = guildData.members.filter(f=>{
-                        return f.playerInfo.uuid===e.uuid.replace(/-/g,"")
+
+                let players = senitherData.data.filter(e => {
+                    let rank = guildData.members.filter(f => {
+                        return f.playerInfo.uuid === e.uuid.replace(/-/g, "")
                     })[0]?.guildInfo?.rank || "notinguildpepega";
-                    
-                    return rank === "Member" || rank==="Elite"||rank==="Skyblock King"||rank==="Skyblock God"
-                }).sort((a,b)=>{
-                    return b.weight-a.weight
+
+                    return rank === "Member" || rank === "Elite" || rank === "Skyblock King" || rank === "Skyblock God"
+                }).sort((a, b) => {
+                    return b.weight - a.weight
                 })
-                
-                players.forEach((p, rank)=>{
-                    let pRank = rank+1
-                    let currRank = guildData.members.filter(f=>{
-                        return f.playerInfo.uuid===p.uuid.replace(/-/g,"")
+
+                players.forEach((p, rank) => {
+                    let pRank = rank + 1
+                    let currRank = guildData.members.filter(f => {
+                        return f.playerInfo.uuid === p.uuid.replace(/-/g, "")
                     })[0]?.guildInfo?.rank || "notinguildpepega";
 
                     let needRank = 'Member'
 
-                    if(pRank <= 60){
+                    if (pRank <= 60) {
                         needRank = "Elite"
                     }
-                    if(pRank <= 20){
+                    if (pRank <= 20) {
                         needRank = "Skyblock King"
                     }
-                    if(pRank <= 5){
+                    if (pRank <= 5) {
                         needRank = "Skyblock God"
                     }
 
-                    if(currRank !== needRank){
+                    if (currRank !== needRank) {
                         commandQueue.other.push("/g setrank " + p.username + " " + needRank)
                     }
                 })
 
                 commandQueue.other.push(spamBypass("/gc @everyone, finished updating ranks!"))
             }
-    
-            commandFunctions.lowestbin = function(player, command, args, reply) {
+
+            commandFunctions.lowestbin = function (player, command, args, reply) {
                 let vals = {}
-    
+
                 args.forEach((arg) => {
                     if (arg == "lowestbin") {
                         return;
@@ -1714,44 +1791,44 @@ register("worldLoad",()=>{
                         if (lowestBin.toLowerCase().includes(arg.toLowerCase())) {
                             if (vals[lowestBin] == undefined) { vals[lowestBin] = 0 }
                             vals[lowestBin]++
-                                vals[lowestBin] -= 0.01 * lowestBin.length
+                            vals[lowestBin] -= 0.01 * lowestBin.length
                         }
                     })
                 })
-    
+
                 let topItem = undefined
                 let topScore = 0;
-    
+
                 Object.keys(vals).forEach((val) => {
                     if (vals[val] > topScore) {
                         topItem = val
                         topScore = vals[val]
                     }
                 })
-    
+
                 if (topItem === undefined) {
                     reply("No auctions found!")
                     return;
                 }
-    
+
                 let itemName = topItem.replace(/_/g, " ").toLowerCase()
                 itemName = itemName.substr(0, 1).toUpperCase() + itemName.substr(1)
-    
+
                 reply("Cheapest bin for " + itemName + " is " + numberWithCommas(lowestBins[topItem]) + "!")
-    
+
             }
-            commandFunctions.skillaverage = function(player, command, args, reply) {
+            commandFunctions.skillaverage = function (player, command, args, reply) {
 
                 let uuidData
                 try {
-                  uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
+                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
                 } catch (e) {
-                  if (commandsSpeed > commandsSpeedLimit) {
-                      commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
-                  } else {
-                      commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
-                  }
-                  return;
+                    if (commandsSpeed > commandsSpeedLimit) {
+                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
+                    } else {
+                        commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
+                    }
+                    return;
                 }
 
                 let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getPlayerSkill.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + uuidData.id))
@@ -1769,20 +1846,20 @@ register("worldLoad",()=>{
                         commandQueue.other.push(spamBypass("/gc @" + player + ", Error! (" + data.reason + ")"))
                     }
                 }
-    
+
             }
-            commandFunctions.slayer = function(player, command, args, reply) {
+            commandFunctions.slayer = function (player, command, args, reply) {
 
                 let uuidData
                 try {
-                  uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
+                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
                 } catch (e) {
-                  if (commandsSpeed > commandsSpeedLimit) {
-                      commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
-                  } else {
-                      commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
-                  }
-                  return;
+                    if (commandsSpeed > commandsSpeedLimit) {
+                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
+                    } else {
+                        commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
+                    }
+                    return;
                 }
 
                 let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getPlayerSkill.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + uuidData.id))
@@ -1800,21 +1877,21 @@ register("worldLoad",()=>{
                         commandQueue.other.push(spamBypass("/gc @" + player + ", Error! (" + data.reason + ")"))
                     }
                 }
-    
+
             }
-    
-            commandFunctions.dungeon = function(player, command, args, reply) {
+
+            commandFunctions.dungeon = function (player, command, args, reply) {
 
                 let uuidData
                 try {
-                  uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
+                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
                 } catch (e) {
-                  if (commandsSpeed > commandsSpeedLimit) {
-                      commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
-                  } else {
-                      commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
-                  }
-                  return;
+                    if (commandsSpeed > commandsSpeedLimit) {
+                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
+                    } else {
+                        commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
+                    }
+                    return;
                 }
 
                 let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getPlayerSkill.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + uuidData.id))
@@ -1832,13 +1909,13 @@ register("worldLoad",()=>{
                         commandQueue.other.push(spamBypass("/gc @" + player + ", Error! (" + data.reason + ")"))
                     }
                 }
-    
+
             }
-            commandFunctions.secrets = function(player, command, args, reply) {
+            commandFunctions.secrets = function (player, command, args, reply) {
 
                 let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player/" + (args[1] || player)))
 
-                if(!data.data.exists){
+                if (!data.data.exists) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + " does not exist!"))
                     } else {
@@ -1852,13 +1929,13 @@ register("worldLoad",()=>{
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + "'s dungeon secrets: " + numberWithCommas(data.data.stats.achievements.skyblock.dungeon_secrets || 0)))
                 }
-    
+
             }
-            commandFunctions.weight = function(player, command, args, reply) {
+            commandFunctions.weight = function (player, command, args, reply) {
 
                 let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player/" + (args[1] || player)))
 
-                if(!data.data.exists){
+                if (!data.data.exists) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + " does not exist!"))
                     } else {
@@ -1874,12 +1951,12 @@ register("worldLoad",()=>{
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + "'s weight: " + numberWithCommas(Math.round(weightData.total)) + " (Skill: " + numberWithCommas(Math.round(weightData.skill.total)) + ", Slayer: " + numberWithCommas(Math.round(weightData.slayer.total)) + ", Dungeons: " + numberWithCommas(Math.round(weightData.dungeons.total)) + ")"))
                 }
-    
+
             }
-    
-            commandFunctions.bazzar = function(player, command, args, reply) {
+
+            commandFunctions.bazzar = function (player, command, args, reply) {
                 let vals = {}
-    
+
                 args.forEach((arg) => {
                     if (arg == "bazzar") {
                         return;
@@ -1892,17 +1969,17 @@ register("worldLoad",()=>{
                         }
                     })
                 })
-    
+
                 let topItem = undefined
                 let topScore = 0;
-    
+
                 Object.keys(vals).forEach((val) => {
                     if (vals[val] > topScore) {
                         topItem = val
                         topScore = vals[val]
                     }
                 })
-    
+
                 if (topItem === undefined) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot no item found!"))
@@ -1911,31 +1988,31 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 let itemName = bazaar[topItem].name
-    
+
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Insta buy for " + itemName + " is " + numberWithCommas(Math.round(bazaar[topItem].buyPrice)) + " Insta sell is " + numberWithCommas(Math.round(bazaar[topItem].sellPrice)) + "!"))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", Insta buy for " + itemName + " is " + numberWithCommas(Math.round(bazaar[topItem].buyPrice)) + " Insta sell is " + numberWithCommas(Math.round(bazaar[topItem].sellPrice)) + "!"))
                 }
-    
+
             }
-            commandFunctions.help = function(player, command, args, reply) {
+            commandFunctions.help = function (player, command, args, reply) {
                 if (commandsSpeed > commandsSpeedLimit) {
-    
+
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + " DMing you the results, make sure to have your dms open :)"))
                 }
-    
+
                 if (args[1] === undefined) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Possible commands are:"))
                     let helpLines = [""]
                     Object.keys(commandFunctions).forEach((commandF) => {
-                        if(helpLines[helpLines.length-1].length > 100){
+                        if (helpLines[helpLines.length - 1].length > 100) {
                             helpLines[helpLines.length] = commandF
-                        }else{
-                            helpLines[helpLines.length-1] +=", " + commandF
+                        } else {
+                            helpLines[helpLines.length - 1] += ", " + commandF
                         }
                     })
                     helpLines.forEach((commandF) => {
@@ -1944,22 +2021,22 @@ register("worldLoad",()=>{
                 } else {
                     switch (args[1]) {
                         case "aliases":
-    
+
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Command aliases "))
                             Object.keys(commandAlias).forEach((alias) => {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + alias + " runs " + commandAlias[alias]))
                             })
                             break;
-    
+
                         default:
-    
+
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Help for command " + args[1]))
                             break;
                     }
                 }
             }
-            commandFunctions.joke = function(player, command, args, reply) {
-                
+            commandFunctions.joke = function (player, command, args, reply) {
+
                 if (args[1] == "player") {
                     if (args[3] == undefined) {
                         args[3] = ""
@@ -1974,7 +2051,7 @@ register("worldLoad",()=>{
                     return;
                 }
 
-                if(Math.random() < 0.05 && !(commandsSpeed > commandsSpeedLimit)){
+                if (Math.random() < 0.05 && !(commandsSpeed > commandsSpeedLimit)) {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", Here is the funniest joke i know..."))
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + player))
                     return
@@ -1988,42 +2065,42 @@ register("worldLoad",()=>{
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + joke.data.punchline))
                 }
             }
-            commandFunctions.math = function(player, command, args, reply) {
-                if(args === undefined){
+            commandFunctions.math = function (player, command, args, reply) {
+                if (args === undefined) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid equasion!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", invalid equasion!"))
                     }
                 }
-    
+
                 args.shift()
-                    
+
                 let res;
-                try{
+                try {
                     res = FileLib.getUrlContent("http://api.mathjs.org/v4/?expr=" + encodeURIComponent(args.join(" ")))
-                }catch(e){
-                    res = mathBad[Math.floor(Math.random()*mathBad.length)]
+                } catch (e) {
+                    res = mathBad[Math.floor(Math.random() * mathBad.length)]
                 }
-    
-                if(/[0-9]\.?[0-9]*e\+[0-9]+/.test(res)){
+
+                if (/[0-9]\.?[0-9]*e\+[0-9]+/.test(res)) {
                     res = numberWithCommas(parseFloat(res))
                 }
-    
+
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + res))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + res))
                 }
             }
-            commandFunctions.whatdoing = function(player, command, args, reply) {
+            commandFunctions.whatdoing = function (player, command, args, reply) {
                 let playerCheck = args[1] || player
-    
+
                 let res = ""
-                
+
                 let playerData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=player?name=" + playerCheck.replace("_", "^")))
                 let playerUUID = ""
-    
+
                 if (!playerData.success) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + playerData.reason))
@@ -2040,7 +2117,7 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 if (playerData.data.player == null) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data (Invalid player?)"))
@@ -2049,11 +2126,11 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 playerUUID = playerData.data.player.uuid
-                
+
                 let skyblockData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=skyblock_profiles?uuid=" + playerUUID))
-    
+
                 if (!skyblockData.success) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + skyblockData.reason))
@@ -2070,9 +2147,9 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 let last_save = 0
-    
+
                 let playerProfile = skyblockData.data?.profiles[0] || {}
                 skyblockData.data.profiles.forEach((profile) => {
                     if (profile.members[playerUUID].last_save > last_save) {
@@ -2081,47 +2158,47 @@ register("worldLoad",()=>{
                     }
                 })
                 let playerProf = playerProfile.members[playerUUID]
-    
+
                 let statusData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=status?uuid=" + playerUUID))
-    
-                if(statusData.data.session.online){
-                    if(statusData.data.session.gameType === "SKYBLOCK"){
-                        switch(statusData.data.session.mode){
+
+                if (statusData.data.session.online) {
+                    if (statusData.data.session.gameType === "SKYBLOCK") {
+                        switch (statusData.data.session.mode) {
                             case "combat_1":
-                                if(playerProf?.slayer_quest?.type === "spider"){
-                                    res = `doing t${playerProf.slayer_quest.tier+1} tarantulas`
+                                if (playerProf?.slayer_quest?.type === "spider") {
+                                    res = `doing t${playerProf.slayer_quest.tier + 1} tarantulas`
                                     break;
                                 }
-                                case "hub":
-                                    if(playerProf?.slayer_quest?.type === "wolf"){
-                                        res = `doing t${playerProf.slayer_quest.tier+1} svens (at the hub)`
-                                        break;
-                                    }
-                                    if(playerProf?.slayer_quest?.type === "zombie"){
-                                        res = `doing t${playerProf.slayer_quest.tier+1} revs`
-                                        break;
-                                    }
+                            case "hub":
+                                if (playerProf?.slayer_quest?.type === "wolf") {
+                                    res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the hub)`
+                                    break;
+                                }
+                                if (playerProf?.slayer_quest?.type === "zombie") {
+                                    res = `doing t${playerProf.slayer_quest.tier + 1} revs`
+                                    break;
+                                }
                             case "combat_3":
-                                if(playerProf?.slayer_quest?.type === "enderman"){
-                                    res = `doing t${playerProf.slayer_quest.tier+1} Voidgloom Seraphs`
+                                if (playerProf?.slayer_quest?.type === "enderman") {
+                                    res = `doing t${playerProf.slayer_quest.tier + 1} Voidgloom Seraphs`
                                     break;
                                 }
                             case "foraging_1":
-                                if(playerProf?.slayer_quest?.type === "wolf"){
-                                    res = `doing t${playerProf.slayer_quest.tier+1} svens (at the park)`
+                                if (playerProf?.slayer_quest?.type === "wolf") {
+                                    res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the park)`
                                     break;
                                 }
                             default:
-                                res = "playing " + statusData.data.session.gameType + " (" + (areaData[statusData.data.session.mode]?areaData[statusData.data.session.mode].Display || (statusData.data.session.mode):statusData.data.session.mode) + ")"
-                            break;
+                                res = "playing " + statusData.data.session.gameType + " (" + (areaData[statusData.data.session.mode] ? areaData[statusData.data.session.mode].Display || (statusData.data.session.mode) : statusData.data.session.mode) + ")"
+                                break;
                         }
-                    }else{
+                    } else {
                         res = "playing " + statusData.data.session.gameType + " " + statusData.data.session.mode
                     }
-                }else{
+                } else {
                     res = "offline"
                 }
-    
+
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + playerCheck + " is currently " + res))
                 } else {
@@ -2129,7 +2206,7 @@ register("worldLoad",()=>{
                 }
             }
             commandFunctions.networth = function (player, command, args) {
-            
+
                 let uuidData
                 try {
                     uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
@@ -2144,10 +2221,10 @@ register("worldLoad",()=>{
                 let data2 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player_skyblock/" + (uuidData.id) + "/nw" + (args[2] === "current" ? "/current/" : "") + "?key=dee67f9c765cf8df"))
 
                 let nw = args[2] === "current" ? data2.data.profiles[data2.data.stats.currentProfileId].members[uuidData.id].networth : data2.data.stats.networth
-            
+
                 let status = nw.status
                 let cause = nw.cause
-            
+
                 if (status !== 200) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Status: " + status + ", cause: " + cause))
@@ -2156,10 +2233,10 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-            
+
                 let totalnw = nw.total
                 // totalnw += data2.data.profiles[ args[2] === "current" ?data2.data.stats.currentProfileId:data2.data.stats.bestProfileId].stats.bank_balance || 0
-            
+
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s (maro) networth: " + (numberWithCommas(Math.floor(totalnw)))))
                 } else {
@@ -2179,13 +2256,13 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-                
-                let data2 = JSON.parse(FileLib.getUrlContent("https://hypixel-app-api.senither.com/leaderboard/player/" + add_dashes_to_uuid(uuidData.id) ))
-                
+
+                let data2 = JSON.parse(FileLib.getUrlContent("https://hypixel-app-api.senither.com/leaderboard/player/" + add_dashes_to_uuid(uuidData.id)))
+
                 let currData = data2.data[0]
                 let lastWeekData = undefined
-                data2.data.forEach(d=>{
-                    if(Date.now()-new Date(d.updated_at).getTime()<=7*24*60*60*1000){
+                data2.data.forEach(d => {
+                    if (Date.now() - new Date(d.updated_at).getTime() <= 7 * 24 * 60 * 60 * 1000) {
                         lastWeekData = d
                     }
                 })
@@ -2194,37 +2271,37 @@ register("worldLoad",()=>{
 
                 let oD = lastWeekData[thing]
                 let cD = currData[thing]
-                let change = Math.round((cD-oD)*100)/100
+                let change = Math.round((cD - oD) * 100) / 100
 
                 if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + " has gained " + numberWithCommas(change) + " " + thing + " in the last week! ("+numberWithCommas(oD)+" -> " + numberWithCommas(cD) + ")"))
+                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + " has gained " + numberWithCommas(change) + " " + thing + " in the last week! (" + numberWithCommas(oD) + " -> " + numberWithCommas(cD) + ")"))
                 } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + " has gained " + numberWithCommas(change) + " " + thing + " in the last week! ("+numberWithCommas(oD)+" -> " + numberWithCommas(cD) + ")"))
+                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + " has gained " + numberWithCommas(change) + " " + thing + " in the last week! (" + numberWithCommas(oD) + " -> " + numberWithCommas(cD) + ")"))
                 }
             }
-            commandFunctions.soopynw = function(player, command, args, reply) {
+            commandFunctions.soopynw = function (player, command, args, reply) {
                 if (args[1] === undefined) {
                     args[1] = player
                 }
-    
+
                 let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
                 try {
                     let netWorth = 0
                     let netWorthLast = 0
-    
-    
+
+
                     function worthChangeVerift() {
                         if (netWorth.toString() === "NaN" || netWorth.toString() === "undefined") {
                             netWorth = netWorthLast
                         }
                         netWorthLast = netWorth
                     }
-    
+
                     let items = []
                     let pets = []
-    
+
                     Object.keys(data.profiles).forEach((profId) => {
-                        let itemStorage = ["wardrobe_inventory", "inventory", "enderchest", "talisman_bag", "fishing_bag", "quiver", "potion_bag","storage"]
+                        let itemStorage = ["wardrobe_inventory", "inventory", "enderchest", "talisman_bag", "fishing_bag", "quiver", "potion_bag", "storage"]
                         let itemStorageReplace = {
                             "wardrobe": "wardrobe_inventory",
                             "ward": "wardrobe_inventory",
@@ -2238,7 +2315,7 @@ register("worldLoad",()=>{
                         itemStorage.forEach((itemLocation) => {
                             data.profiles[profId].items[itemLocation].forEach((item) => {
                                 if (args[2] === undefined || args[2].toLowerCase() === itemLocation || itemStorageReplace[args[2].toLowerCase()] === itemLocation) {
-                                    items.push({...item, "location": itemLocation })
+                                    items.push({ ...item, "location": itemLocation })
                                 }
                             })
                         })
@@ -2247,7 +2324,7 @@ register("worldLoad",()=>{
                                 pets.push(pet)
                             })
                         }
-    
+
                         if (args[2] === undefined) {
                             netWorth += data.profiles[profId].raw.coin_purse
                             worthChangeVerift()
@@ -2267,16 +2344,16 @@ register("worldLoad",()=>{
                         netWorth += getPetWorth(pet)
                         worthChangeVerift()
                     })
-    
-    
+
+
                     netWorth = addNotation("oneLetters", netWorth)
-    
+
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (args[1] === player ? "You have" : args[1] + " has") + " a networth of $" + netWorth + "!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", " + (args[1] === player ? "You have" : args[1] + " has") + " a networth of $" + netWorth + "!"))
                     }
-    
+
                 } catch (e) {
                     console.log(JSON.stringify(e))
                     if (commandsSpeed > commandsSpeedLimit) {
@@ -2286,74 +2363,74 @@ register("worldLoad",()=>{
                     }
                 }
             }
-    
+
             function getItemWorth(item) {
                 let worth = 0;
                 let worthLast = 0;
-    
+
                 function worthChangeVerift() {
                     if (worth.toString() === "NaN" || worth.toString() === "undefined") {
                         worth = worthLast
                     }
                     worthLast = worth
                 }
-    
+
                 try {
-                    if(item.tag !== undefined){
-                    if (item.tag.ExtraAttributes !== undefined) {
-                        let alb = undefined
-                        if (bazaar[item.tag.ExtraAttributes.id] === undefined) {
-                            worth += getAverageLowestBin(item.tag.ExtraAttributes.id)
-                            alb = getAverageLowestBin(item.tag.ExtraAttributes.id)
-                        } else {
-                            worth += bazaar[item.tag.ExtraAttributes.id].price
-                        }
-                        worthChangeVerift()
-                        if(alb && alb > 50000){
-                            worth += bazaar.RECOMBOBULATOR_3000.price * item.tag.ExtraAttributes.rarity_upgrades
-                        }
-                        worthChangeVerift()
-                        worth += bazaar.HOT_POTATO_BOOK.price * Math.min(10, item.tag.ExtraAttributes.hot_potato_count)
-                        worthChangeVerift()
-                        worth += bazaar.FUMING_POTATO_BOOK.price * Math.max(0, item.tag.ExtraAttributes.hot_potato_count - 10)
-                        worthChangeVerift()
-                        if(item.tag.ExtraAttributes.ability_scroll !== undefined){
-                            item.tag.ExtraAttributes.ability_scroll.forEach((scrollId)=>{
-                                worth += getAverageLowestBin(scrollId)
-                                worthChangeVerift()
-                            })
-                        }
-                        if (item.tag.ExtraAttributes.gems !== undefined) {
-                            Object.keys(item.tag.ExtraAttributes.gems).forEach(gem => {
-                                let gemId = item.tag.ExtraAttributes.gems[gem] + "_"
-                                let a = gem.split("_")
-                                a.pop()
-                                gemId += a.join("_")
-                                gemId += "_GEM"
-        
-                                if (bazaar[gemId]) {
-                                    worth += (bazaar[gemId].price || 0)
-                                    worthChangeVerift()
-                                }
-                            })
-                        }
-                        try {
-                            item.tag.ExtraAttributes.enchantments.forEach((enchant) => {
-                                worth += getAverageLowestBin(enchant + ";" + item.tag.ExtraAttributes.enchantments[enchant])
-                                worthChangeVerift()
-                            })
-                        } catch (e) {}
-                        if (reforgeToStone[item.tag.ExtraAttributes.modifier] !== undefined) {
-                            worth += getAverageLowestBin(reforgeToStone[item.tag.ExtraAttributes.modifier].id)
+                    if (item.tag !== undefined) {
+                        if (item.tag.ExtraAttributes !== undefined) {
+                            let alb = undefined
+                            if (bazaar[item.tag.ExtraAttributes.id] === undefined) {
+                                worth += getAverageLowestBin(item.tag.ExtraAttributes.id)
+                                alb = getAverageLowestBin(item.tag.ExtraAttributes.id)
+                            } else {
+                                worth += bazaar[item.tag.ExtraAttributes.id].price
+                            }
                             worthChangeVerift()
+                            if (alb && alb > 50000) {
+                                worth += bazaar.RECOMBOBULATOR_3000.price * item.tag.ExtraAttributes.rarity_upgrades
+                            }
+                            worthChangeVerift()
+                            worth += bazaar.HOT_POTATO_BOOK.price * Math.min(10, item.tag.ExtraAttributes.hot_potato_count)
+                            worthChangeVerift()
+                            worth += bazaar.FUMING_POTATO_BOOK.price * Math.max(0, item.tag.ExtraAttributes.hot_potato_count - 10)
+                            worthChangeVerift()
+                            if (item.tag.ExtraAttributes.ability_scroll !== undefined) {
+                                item.tag.ExtraAttributes.ability_scroll.forEach((scrollId) => {
+                                    worth += getAverageLowestBin(scrollId)
+                                    worthChangeVerift()
+                                })
+                            }
+                            if (item.tag.ExtraAttributes.gems !== undefined) {
+                                Object.keys(item.tag.ExtraAttributes.gems).forEach(gem => {
+                                    let gemId = item.tag.ExtraAttributes.gems[gem] + "_"
+                                    let a = gem.split("_")
+                                    a.pop()
+                                    gemId += a.join("_")
+                                    gemId += "_GEM"
+
+                                    if (bazaar[gemId]) {
+                                        worth += (bazaar[gemId].price || 0)
+                                        worthChangeVerift()
+                                    }
+                                })
+                            }
+                            try {
+                                item.tag.ExtraAttributes.enchantments.forEach((enchant) => {
+                                    worth += getAverageLowestBin(enchant + ";" + item.tag.ExtraAttributes.enchantments[enchant])
+                                    worthChangeVerift()
+                                })
+                            } catch (e) { }
+                            if (reforgeToStone[item.tag.ExtraAttributes.modifier] !== undefined) {
+                                worth += getAverageLowestBin(reforgeToStone[item.tag.ExtraAttributes.modifier].id)
+                                worthChangeVerift()
+                            }
                         }
                     }
-                }
                     //ChatLib.chat(item.tag.ExtraAttributes.id + ": " + lowestBinsAvg[item.tag.ExtraAttributes.id])
                 } catch (e) {
                     console.log(JSON.stringify(e))
                 }
-    
+
                 if (item.containsItems !== undefined) {
                     item.containsItems.forEach((item2) => {
                         if (item2.Count !== undefined) {
@@ -2361,11 +2438,11 @@ register("worldLoad",()=>{
                         }
                     })
                 }
-    
+
                 return worth * item.Count;
             }
-    
-            
+
+
             function getAverageLowestBin(item) {
                 if (lowestBinsAvg[item] === undefined) {
                     return lowestBins[item]
@@ -2376,20 +2453,20 @@ register("worldLoad",()=>{
                     return lowestBinsAvg[item]
                 }
             }
-    
+
             function getPetWorth(pet) {
                 let worth = 0;
                 let worthLast = 0;
-    
+
                 let petReplace = ["COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"]
-    
+
                 function worthChangeVerift() {
                     if (worth.toString() === "NaN" || worth.toString() === "undefined") {
                         worth = worthLast
                     }
                     worthLast = worth
                 }
-    
+
                 try {
                     worth += getAverageLowestBin(pet.type + ";" + petReplace.indexOf(pet.tier))
                     worthChangeVerift()
@@ -2397,66 +2474,66 @@ register("worldLoad",()=>{
                     worthChangeVerift()
                     worth += getAverageLowestBin("PET_SKIN_" + pet.skin)
                     worthChangeVerift()
-                        //ChatLib.chat(item.tag.ExtraAttributes.id + ": " + lowestBinsAvg[item.tag.ExtraAttributes.id])
+                    //ChatLib.chat(item.tag.ExtraAttributes.id + ": " + lowestBinsAvg[item.tag.ExtraAttributes.id])
                 } catch (e) {
                     console.log(JSON.stringify(e))
                 }
-    
+
                 //console.log(pet.type + " " + pet.tier + ": $" + addNotation("oneLetters", worth))
                 return worth;
             }
-    
-            commandFunctions.missingpets = function(player, command, args, reply) {
+
+            commandFunctions.missingpets = function (player, command, args, reply) {
                 if (args[1] === undefined) {
                     args[1] = player
                 }
-    
+
                 let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
-    
+
                 let profile = ""
                 Object.keys(data.profiles).forEach((profileId) => {
                     if (data.profiles[profileId].current) {
                         profile = profileId
                     }
                 })
-    
+
                 let missingPets = data.profiles[profile].data.missingPets
-    
+
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingPets.length + " pets!"))
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot (" + missingPets.slice(0, 5).map(pet => pet.display_name).join(" | ") + (missingPets.length > 5?" | and " + (missingPets.length-5) + " more":"") +  ")"))
+                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot (" + missingPets.slice(0, 5).map(pet => pet.display_name).join(" | ") + (missingPets.length > 5 ? " | and " + (missingPets.length - 5) + " more" : "") + ")"))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingPets.length + " pets!"))
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", (" + missingPets.slice(0, 5).map(pet => pet.display_name).join(" | ") + (missingPets.length > 5?" | and " + (missingPets.length-5) + " more":"") + ")"))
+                    commandQueue.other.push(spamBypass("/gc @" + player + ", (" + missingPets.slice(0, 5).map(pet => pet.display_name).join(" | ") + (missingPets.length > 5 ? " | and " + (missingPets.length - 5) + " more" : "") + ")"))
                 }
             }
-            commandFunctions.missingtalis = function(player, command, args, reply) {
+            commandFunctions.missingtalis = function (player, command, args, reply) {
                 if (args[1] === undefined) {
                     args[1] = player
                 }
-    
+
                 let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
-    
+
                 let profile = ""
                 Object.keys(data.profiles).forEach((profileId) => {
                     if (data.profiles[profileId].current) {
                         profile = profileId
                     }
                 })
-    
+
                 let missingTalis = data.profiles[profile].data.missingTalismans
-    
+
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingTalis.missing.length + " talismans (" + missingTalis.upgrades.length + " upgrades)!"))
-                    if(missingTalis.missing.length>0)commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Talismans: (" + missingTalis.missing.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.missing.length > 5?" | and " + (missingTalis.missing.length-5) + " more":"") +  ")"))
-                    if(missingTalis.upgrades.length>0)commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Upgrades: (" + missingTalis.upgrades.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.upgrades.length > 5?" | and " + (missingTalis.upgrades.length-5) + " more":"") +  ")"))
+                    if (missingTalis.missing.length > 0) commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Talismans: (" + missingTalis.missing.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.missing.length > 5 ? " | and " + (missingTalis.missing.length - 5) + " more" : "") + ")"))
+                    if (missingTalis.upgrades.length > 0) commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Upgrades: (" + missingTalis.upgrades.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.upgrades.length > 5 ? " | and " + (missingTalis.upgrades.length - 5) + " more" : "") + ")"))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingTalis.missing.length + " talismans (" + missingTalis.upgrades.length + " upgrades)!"))
-                    if(missingTalis.missing.length>0)commandQueue.other.push(spamBypass("/gc @" + player + ", Talismans: (" + missingTalis.missing.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.missing.length > 5?" | and " + (missingTalis.missing.length-5) + " more":"") +  ")"))
-                    if(missingTalis.upgrades.length>0)commandQueue.other.push(spamBypass("/gc @" + player + ", Upgrades: (" + missingTalis.upgrades.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.upgrades.length > 5?" | and " + (missingTalis.upgrades.length-5) + " more":"") +  ")"))
+                    if (missingTalis.missing.length > 0) commandQueue.other.push(spamBypass("/gc @" + player + ", Talismans: (" + missingTalis.missing.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.missing.length > 5 ? " | and " + (missingTalis.missing.length - 5) + " more" : "") + ")"))
+                    if (missingTalis.upgrades.length > 0) commandQueue.other.push(spamBypass("/gc @" + player + ", Upgrades: (" + missingTalis.upgrades.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.upgrades.length > 5 ? " | and " + (missingTalis.upgrades.length - 5) + " more" : "") + ")"))
                 }
             }
-            commandFunctions.ehp = function(player, command, args, reply) {
+            commandFunctions.ehp = function (player, command, args, reply) {
                 if (args.length < 2) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot usage: /ehp [health] [defence]!"))
@@ -2473,7 +2550,7 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 let ehp = numberWithCommas(Math.round(parseFloat(args[1]) * ((parseFloat(args[2]) / 100) + 1)))
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + ehp + " ehp!"))
@@ -2481,19 +2558,19 @@ register("worldLoad",()=>{
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + ehp + " ehp!"))
                 }
             }
-            commandFunctions.commandspamfactor = function(player, command, args, reply) {
+            commandFunctions.commandspamfactor = function (player, command, args, reply) {
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot the current command spam amount is " + commandsSpeed.toFixed(2) + "!"))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", the current command spam amount is " + commandsSpeed.toFixed(2) + "!"))
                 }
             }
-            commandFunctions.talismans = function(player, command, args, reply) {
+            commandFunctions.talismans = function (player, command, args, reply) {
                 let playerScan = player
                 if (args[1] !== undefined) {
                     playerScan = args[1]
                 }
-    
+
                 let stats1 = JSON.parse(FileLib.getUrlContent("https://api.slothpixel.me/api/players/" + playerScan))
                 if (stats1.error === "Player does not exist") {
                     if (commandsSpeed > commandsSpeedLimit) {
@@ -2504,21 +2581,21 @@ register("worldLoad",()=>{
                     return;
                 }
                 let stats = JSON.parse(FileLib.getUrlContent("https://api.slothpixel.me/api/skyblock/profile/" + playerScan))
-    
+
                 let talisData = {}
-    
+
                 let messageGChat = ""
                 let message = []
-    
+
                 try {
                     let uuid = stats1.uuid
                     let playerName = stats1.username
-    
+
                     let talisData = stats.members[uuid].talisman_bag
-    
+
                     let totalTalis = 0
                     let totalRecombedTalis = 0
-    
+
                     talisData.forEach((talis) => {
                         if (talis.attributes === undefined) {
                             return;
@@ -2526,24 +2603,24 @@ register("worldLoad",()=>{
                         totalTalis++
                         totalRecombedTalis += talis.attributes.rarity_upgrades == 1 ? 1 : 0
                     })
-    
+
                     messageGChat = playerName + " has a total of " + totalTalis + " talismans (" + totalRecombedTalis + " recombed)"
                 } catch (err) {
                     console.log(JSON.stringify(err))
                     messageGChat = "There was a error :("
                 }
-    
+
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + messageGChat))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + messageGChat))
                 }
-    
+
                 message.forEach((mess) => {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + mess))
                 })
             }
-            commandFunctions.skill = function(player, command, args, reply) {
+            commandFunctions.skill = function (player, command, args, reply) {
                 if (args[1] === undefined || args[2] === undefined) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot requires 2 arguments!"))
@@ -2559,7 +2636,7 @@ register("worldLoad",()=>{
                 if (skillReplace[args[1]] !== undefined) {
                     args[1] = skillReplace[args[1]]
                 }
-    
+
                 if (skillData.collections[args[1].toUpperCase()] === undefined) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill type!"))
@@ -2568,13 +2645,13 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 args[2] = parseInt(args[2]) - 1
-    
-    
+
+
                 if (args[3] !== undefined) {
                     args[3] = parseInt(args[3]) - 1
-    
+
                     if (skillData.collections[args[1].toUpperCase()].levels[args[3]] === undefined) {
                         if (commandsSpeed > commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill level!"))
@@ -2583,12 +2660,12 @@ register("worldLoad",()=>{
                         }
                         return;
                     }
-    
+
                     let needExp = 0
                     if (args[2] === -1) {
                         needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired)
                     } else {
-    
+
                         if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
                             if (commandsSpeed > commandsSpeedLimit) {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill level!"))
@@ -2599,8 +2676,8 @@ register("worldLoad",()=>{
                         }
                         needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired - skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired)
                     }
-    
-    
+
+
                     let expinfo = "it takes " + needExp + " exp to go from " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " -> " + (args[3] + 1)
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + expinfo))
@@ -2617,21 +2694,21 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 if (commandsSpeed > commandsSpeedLimit) {
-    
+
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", dming u the results :)"))
                 }
-    
+
                 Thread.sleep(500)
-    
+
                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " (" + addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired) + " exp)"))
                 skillData.collections[args[1].toUpperCase()].levels[args[2]].unlocks.forEach((unlock) => {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + unlock))
                 })
             }
-            commandFunctions.whatstone = function(player, command, args, reply) {
+            commandFunctions.whatstone = function (player, command, args, reply) {
                 if (args[1] === undefined) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot you need to specify what reforge!"))
@@ -2640,7 +2717,7 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
+
                 if (reforgeToStone[firstLetterCapital(args[1])] === undefined) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid reforge!"))
@@ -2649,30 +2726,30 @@ register("worldLoad",()=>{
                     }
                     return;
                 }
-    
-    
+
+
                 if (commandsSpeed > commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + firstLetterCapital(args[1]) + " is from " + reforgeToStone[firstLetterCapital(args[1])].name + "!"))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + firstLetterCapital(args[1]) + " is from " + reforgeToStone[firstLetterCapital(args[1])].name + "!"))
                 }
             }
-            commandFunctions.amibetterthanagentlai = function(player, command, args, reply) {
+            commandFunctions.amibetterthanagentlai = function (player, command, args, reply) {
                 if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.length%2===0?"yes":"no") + "."))
+                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.length % 2 === 0 ? "yes" : "no") + "."))
                 } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + (player.length%2===0?"yes":"no") + "."))
+                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + (player.length % 2 === 0 ? "yes" : "no") + "."))
                 }
             }
-            commandFunctions.amiworsethanagentlai = function(player, command, args, reply) {
+            commandFunctions.amiworsethanagentlai = function (player, command, args, reply) {
                 if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.length%2===0?"no":"yes") + "."))
+                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.length % 2 === 0 ? "no" : "yes") + "."))
                 } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + (player.length%2===0?"no":"yes") + "."))
+                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + (player.length % 2 === 0 ? "no" : "yes") + "."))
                 }
             }
             // commandFunctions.getbot = function(player, command, args, reply) {
-    
+
             //     let bot = []
             //     let leftBots = fragrunbots
             //     for(let i = 0;i<Math.min(10,parseInt(args[1] || "1"));i++){
@@ -2788,17 +2865,17 @@ register("worldLoad",()=>{
                 "raw_weight/dungeons/tank/weight": "raw_weight/dungeons/tank/weight",
                 "raw_weight/dungeons/tank/overflow": "raw_weight/dungeons/tank/overflow"
             }
-            commandFunctions.lbpos = function(player, command, args, reply) {
+            commandFunctions.lbpos = function (player, command, args, reply) {
                 args.shift()
-                if(args[0] === undefined){
+                if (args[0] === undefined) {
                     args[0] = "weight"
                 }
-                if(args[1] === undefined){
+                if (args[1] === undefined) {
                     args[1] = player
                 }
-                
+
                 // gen args replace
-    
+
                 /*
     function doThing(obj, yes){
         let ret1 = []
@@ -2820,40 +2897,40 @@ register("worldLoad",()=>{
         return ret;
     }
                 */
-                
+
                 args[0] = lbpos_argsReplace[args[0].toLowerCase()] || "weight"
-    
-                function getThing(obj, path){
+
+                function getThing(obj, path) {
                     path = path.split("/")
-                    path.forEach((a)=>{
+                    path.forEach((a) => {
                         obj = obj[a]
                     })
                     return obj
                 }
-                
-                let players = senitherData.data.sort((a,b)=>{return getThing(b,args[0])-getThing(a,args[0])})
-                if(args[2] === "excludestaff"){
-                    players = players.filter(p=>{
-                        let rank = guildData.members.filter(f=>{
-                            return f.playerInfo.uuid===p.uuid.replace(/-/g,"")
+
+                let players = senitherData.data.sort((a, b) => { return getThing(b, args[0]) - getThing(a, args[0]) })
+                if (args[2] === "excludestaff") {
+                    players = players.filter(p => {
+                        let rank = guildData.members.filter(f => {
+                            return f.playerInfo.uuid === p.uuid.replace(/-/g, "")
                         })[0]?.guildInfo?.rank || "notinguildpepega";
-                        return rank === "Member" || rank==="Elite"||rank==="Skyblock King"||rank==="Skyblock God" 
+                        return rank === "Member" || rank === "Elite" || rank === "Skyblock King" || rank === "Skyblock God"
                     })
                 }
-    
+
                 let done = false
-                players.forEach((p,i)=>{
-                    if(p.username.toLowerCase() === args[1].toLowerCase() || (i+1).toString() === args[1]){
+                players.forEach((p, i) => {
+                    if (p.username.toLowerCase() === args[1].toLowerCase() || (i + 1).toString() === args[1]) {
                         done = true
                         if (commandsSpeed > commandsSpeedLimit) {
-                            commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (p.username.toLowerCase()===player.toLowerCase()?"You are":p.username + " is") + " #" + (i+1) + " on the " + args[0] + " lb! (" + numberWithCommas(getThing(p,args[0])) + ")"))
+                            commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (p.username.toLowerCase() === player.toLowerCase() ? "You are" : p.username + " is") + " #" + (i + 1) + " on the " + args[0] + " lb! (" + numberWithCommas(getThing(p, args[0])) + ")"))
                         } else {
-                            commandQueue.other.push(spamBypass("/gc @" + player + ", " + (p.username.toLowerCase()===player.toLowerCase()?"You are":p.username + " is") + " #" + (i+1) + " on the " + args[0] + " lb! (" + numberWithCommas(getThing(p,args[0])) + ")"))
+                            commandQueue.other.push(spamBypass("/gc @" + player + ", " + (p.username.toLowerCase() === player.toLowerCase() ? "You are" : p.username + " is") + " #" + (i + 1) + " on the " + args[0] + " lb! (" + numberWithCommas(getThing(p, args[0])) + ")"))
                         }
                     }
                 })
-    
-                if(!done){
+
+                if (!done) {
                     if (commandsSpeed > commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot could not find \"" + args[1] + "\" on the lb. if you are new to the guild wait for up to 1 day for it to update!"))
                     } else {
@@ -2861,10 +2938,10 @@ register("worldLoad",()=>{
                     }
                 }
             }
-    
-    
-    
-    
+
+
+
+
             const chars = [
                 ",",
                 "."
@@ -2872,12 +2949,12 @@ register("worldLoad",()=>{
             const spamBypass = message => {
                 for (let i = 0; i < (255 - message.length); i++) {
                     let char = chars[Math.floor(Math.random() * chars.length)];
-                    if(i<2)char =" "
+                    if (i < 2) char = " "
                     message += char;
                 }
                 return message
             }
-    
+
             function addNotation(type, value) {
                 let returnVal = value;
                 let notList = [];
@@ -2893,13 +2970,13 @@ register("worldLoad",()=>{
                         " Quintillion"
                     ];
                 }
-    
+
                 if (type === "oneLetters") {
                     notList = [" K", " M", " B", " T"];
                 }
-    
+
                 let checkNum = 1000;
-    
+
                 if (type !== "none" && type !== "commas") {
                     let notValue = notList[notList.length - 1];
                     for (let u = notList.length; u >= 1; u--) {
@@ -2917,17 +2994,17 @@ register("worldLoad",()=>{
                 } else {
                     returnVal = numberWithCommas(value.toFixed(0));
                 }
-    
+
                 return returnVal;
             }
-    
+
             function numberWithCommas(x) {
                 if (x === undefined) { return "" }
                 var parts = x.toString().split(".");
                 parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 return parts.join(".");
             }
-    
+
             var sha256 = function a(b) {
                 function c(a, b) { return a >>> b | a << 32 - b }
                 for (var d, e, f = Math.pow, g = f(2, 32), h = "length", i = "", j = [], k = 8 * b[h], l = a.h = a.h || [], m = a.k = a.k || [], n = m[h], o = {}, p = 2; 64 > n; p++)
@@ -2961,16 +3038,16 @@ register("worldLoad",()=>{
                     }
                 return i
             };
-    
-    
-            var timeSince = function(date) {
+
+
+            var timeSince = function (date) {
                 if (typeof date !== 'object') {
                     date = new Date(date);
                 }
-    
+
                 var seconds = Math.floor((new Date() - date) / 1000);
                 var intervalType;
-    
+
                 var interval = Math.floor(seconds / 31536000);
                 if (interval >= 1) {
                     intervalType = 'year';
@@ -2998,68 +3075,68 @@ register("worldLoad",()=>{
                         }
                     }
                 }
-    
+
                 if (interval > 1 || interval === 0) {
                     intervalType += 's';
                 }
-    
+
                 return interval + ' ' + intervalType;
             };
-    
+
             function getLevelByXp(xp, type, levelCap) {
                 let xp_table =
-                  type == 1
-                    ? someData.runecrafting_xp
-                    : type == 2
-                      ? someData.dungeoneering_xp
-                      : someData.leveling_xp;
-              
+                    type == 1
+                        ? someData.runecrafting_xp
+                        : type == 2
+                            ? someData.dungeoneering_xp
+                            : someData.leveling_xp;
+
                 if (isNaN(xp)) {
-                  return {
-                    xp: 0,
-                    level: 0,
-                    xpCurrent: 0,
-                    xpForNext: xp_table[1],
-                    progress: 0,
-                  };
+                    return {
+                        xp: 0,
+                        level: 0,
+                        xpCurrent: 0,
+                        xpForNext: xp_table[1],
+                        progress: 0,
+                    };
                 }
-              
+
                 let xpTotal = 0;
                 let level = 0;
-              
+
                 let xpForNext = Infinity;
-              
-                let maxLevel = Math.min(levelCap,Object.keys(xp_table)
-                  .sort((a, b) => Number(a) - Number(b))
-                  .map((a) => Number(a))
-                  .pop())
-              
+
+                let maxLevel = Math.min(levelCap, Object.keys(xp_table)
+                    .sort((a, b) => Number(a) - Number(b))
+                    .map((a) => Number(a))
+                    .pop())
+
                 for (let x = 1; x <= maxLevel; x++) {
-                  xpTotal += xp_table[x];
-              
-                  if (xpTotal > xp) {
-                    xpTotal -= xp_table[x];
-                    break;
-                  } else {
-                    level = x;
-                  }
+                    xpTotal += xp_table[x];
+
+                    if (xpTotal > xp) {
+                        xpTotal -= xp_table[x];
+                        break;
+                    } else {
+                        level = x;
+                    }
                 }
-              
+
                 let xpCurrent = Math.floor(xp - xpTotal);
-              
+
                 if (level < maxLevel) xpForNext = Math.ceil(xp_table[level + 1]);
-              
+
                 let progress = Math.max(0, Math.min(xpCurrent / xpForNext, 1));
-              
+
                 return {
-                  xp,
-                  level,
-                  maxLevel,
-                  xpCurrent,
-                  xpForNext,
-                  progress,
+                    xp,
+                    level,
+                    maxLevel,
+                    xpCurrent,
+                    xpForNext,
+                    progress,
                 };
-              }
+            }
             let skillLevelCaps = {
                 "experience_skill_combat": 60,
                 "experience_skill_foraging": 50,
@@ -3069,7 +3146,7 @@ register("worldLoad",()=>{
                 "experience_skill_enchanting": 60,
                 "experience_skill_mining": 60,
                 "experience_skill_taming": 50,
-              }
+            }
             let someData = {
                 leveling_xp: {
                     1: 50,
@@ -3132,8 +3209,8 @@ register("worldLoad",()=>{
                     58: 6400000,
                     59: 6700000,
                     60: 7000000
-                  },
-    
+                },
+
                 // XP required for each level of Runecrafting
                 runecrafting_xp: {
                     1: 50,
@@ -3162,7 +3239,7 @@ register("worldLoad",()=>{
                     24: 15300,
                     25: 19050
                 },
-    
+
                 dungeoneering_xp: {
                     1: 50,
                     2: 75,
@@ -3215,7 +3292,7 @@ register("worldLoad",()=>{
                     49: 93000000,
                     50: 116250000
                 },
-    
+
                 guild_xp: [
                     100000,
                     150000,
@@ -3233,7 +3310,7 @@ register("worldLoad",()=>{
                     2500000,
                     3000000
                 ],
-    
+
                 // total XP required for level of Slayer
                 slayer_xp: {
                     zombie: {
@@ -3270,7 +3347,7 @@ register("worldLoad",()=>{
                         9: 1000000
                     }
                 },
-    
+
                 slayer_boss_xp: {
                     1: 5,
                     2: 25,
@@ -3278,17 +3355,17 @@ register("worldLoad",()=>{
                     4: 500
                 }
             };
-    
+
             function firstLetterCapital(string) {
                 return string.substr(0, 1).toUpperCase() + string.substr(1)
             }
-    
+
             function firstLetterWordCapital(string) {
                 let retString = ""
                 string.split(" ").forEach((str) => { retString += " " + firstLetterCapital(str) })
                 return retString.substr(1);
             }
-    
+
             let tierBoostChange = {
                 "COMMON": "UNCOMMON",
                 "UNCOMMON": "RARE",
@@ -3296,20 +3373,20 @@ register("worldLoad",()=>{
                 "EPIC": "LEGENDARY",
                 "LEGENDARY": "LEGENDARY"
             }
-    
+
             function getPetLevel(pet) {
                 const rarityOffset = constants.pet_rarity_offset[pet.tier.toLowerCase()];
                 const levels = constants.pet_levels.slice(rarityOffset, rarityOffset + 99);
-    
+
                 const xpMaxLevel = levels.reduce((a, b) => a + b, 0)
                 let xpTotal = 0;
                 let level = 1;
-    
+
                 let xpForNext;
-    
+
                 for (let i = 0; i < 100; i++) {
                     xpTotal += levels[i];
-    
+
                     if (xpTotal > pet.exp) {
                         xpTotal -= levels[i];
                         break;
@@ -3317,10 +3394,10 @@ register("worldLoad",()=>{
                         level++;
                     }
                 }
-    
+
                 let xpCurrent = Math.floor(pet.exp - xpTotal);
                 let progress;
-    
+
                 if (level < 100) {
                     xpForNext = Math.ceil(levels[level - 1]);
                     progress = Math.max(0, Math.min(xpCurrent / xpForNext, 1));
@@ -3330,7 +3407,7 @@ register("worldLoad",()=>{
                     xpForNext = 0;
                     progress = 1;
                 }
-    
+
                 return {
                     level,
                     xpCurrent,
@@ -3339,7 +3416,7 @@ register("worldLoad",()=>{
                     xpMaxLevel
                 };
             }
-    
+
             let constants = {
                 pet_rarity_offset: {
                     common: 0,
@@ -3348,7 +3425,7 @@ register("worldLoad",()=>{
                     epic: 16,
                     legendary: 20
                 },
-    
+
                 pet_levels: [
                     100,
                     110,
@@ -3470,7 +3547,7 @@ register("worldLoad",()=>{
                     1746700,
                     1886700
                 ],
-    
+
                 pet_levels_accum: [
                     100,
                     110,
@@ -3592,7 +3669,7 @@ register("worldLoad",()=>{
                     1746700,
                     1886700
                 ],
-    
+
                 pet_data: {
                     "BAT": {
                         head: "/head/382fc3f71b41769376a9e92fe3adbaac3772b999b219c9d6b4680ba9983e527",
@@ -3820,7 +3897,7 @@ register("worldLoad",()=>{
                         emoji: "🐬"
                     }
                 },
-    
+
                 pet_value: {
                     "common": 1,
                     "uncommon": 2,
@@ -3828,7 +3905,7 @@ register("worldLoad",()=>{
                     "epic": 4,
                     "legendary": 5
                 },
-    
+
                 pet_rewards: {
                     0: {
                         magic_find: 0
@@ -3855,7 +3932,7 @@ register("worldLoad",()=>{
                         magic_find: 7
                     }
                 },
-    
+
                 pet_items: {
                     PET_ITEM_ALL_SKILLS_BOOST_COMMON: {
                         description: "§7Gives +§a10% §7pet exp for all skills",
@@ -4202,7 +4279,7 @@ register("worldLoad",()=>{
                         WITHER_ARTIFACT: [
                             'WITHER_RELIC'
                         ],
-    
+
                         WEDDING_RING_0: [
                             'WEDDING_RING_2',
                             'WEDDING_RING_4',
@@ -4221,7 +4298,7 @@ register("worldLoad",()=>{
                         WEDDING_RING_7: [
                             'WEDDING_RING_9'
                         ],
-    
+
                         CAMPFIRE_TALISMAN_1: [
                             'CAMPFIRE_TALISMAN_4',
                             'CAMPFIRE_TALISMAN_8',
@@ -4241,7 +4318,7 @@ register("worldLoad",()=>{
                             'CAMPFIRE_TALISMAN_21'
                         ]
                     },
-    
+
                     talisman_duplicates: {
                         WEDDING_RING_0: [
                             'WEDDING_RING_1'
@@ -4256,7 +4333,7 @@ register("worldLoad",()=>{
                         WEDDING_RING_7: [
                             'WEDDING_RING_8'
                         ],
-    
+
                         CAMPFIRE_TALISMAN_1: [
                             'CAMPFIRE_TALISMAN_2',
                             'CAMPFIRE_TALISMAN_3'
@@ -4318,7 +4395,7 @@ register("worldLoad",()=>{
                             rarity: "legendary",
                             texture: "/head/8fb265c8cc6136063b4eb15450fe1fe1ab7738b0bf54d265490e1ef49da60b7c"
                         },
-    
+
                         'CAMPFIRE_TALISMAN_1': {
                             name: "Campfire Initiate Badge",
                             rarity: "common",
@@ -4344,7 +4421,7 @@ register("worldLoad",()=>{
                             rarity: "legendary",
                             texture: "/head/4080bbefca87dc0f36536b6508425cfc4b95ba6e8f5e6a46ff9e9cb488a9ed"
                         },
-    
+
                         'FARMING_TALISMAN': null,
                         'VACCINE_TALISMAN': {
                             name: "Vaccine Talisman",
@@ -4624,168 +4701,168 @@ register("worldLoad",()=>{
                     }
                 }
             }
-    
+
             function getPlayerSkill(skillExp, slayerExp) {
                 return Math.round(Math.pow(skillExp / 1, 0.5))
             }
-    
+
             let lastUpdateBots = 0
-    
+
             // let fragrunbots = []
-    
-            
+
+
             // function updateFragRunBots(a){
             //     if(Date.now()-lastUpdateBots < 60000*5 && !a) return;
             //     lastUpdateBots = Date.now()
             //     new Thread(()=>{
-    
+
             //         fragrunbots = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/mcBot/getBots.json")).bots
             //     }).start()
             // }
-    
+
             // updateFragRunBots()
             // register("worldLoad",()=>{
             //     updateFragRunBots()
             // })
-    
-        }else{
+
+        } else {
             ChatLib.chat("&cYou are not a bot, why do you have this")
-            ChatLib.command("ct delete sbgbot",true)
+            ChatLib.command("ct delete sbgbot", true)
             // new Message(new TextComponent("&cGo to https://soopymc.my.to/guildbot to register").setHover("show_text")).chat()
         }
     }).start()
-    
+
     let areaData = {
-        "hub":{
-          "Display": "Hub",
-          "Scoreboard":[
-            "Auction House",
-            "Bank",
-            "Bazaar Alley",
-            "Blacksmith",
-            "Builder's House",
-            "Coal Mine",
-            "Colosseum",
-            "Community Center",
-            "Farm House",
-            "Farm",
-            "Fashion Shop",
-            "Flower House",
-            "Forest",
-            "Graveyard",
-            "High Level",
-            "Mountain",
-            "Ruins",
-            "Village",
-            "Wilderness",
-            "Wizard Tower"
-          ]
+        "hub": {
+            "Display": "Hub",
+            "Scoreboard": [
+                "Auction House",
+                "Bank",
+                "Bazaar Alley",
+                "Blacksmith",
+                "Builder's House",
+                "Coal Mine",
+                "Colosseum",
+                "Community Center",
+                "Farm House",
+                "Farm",
+                "Fashion Shop",
+                "Flower House",
+                "Forest",
+                "Graveyard",
+                "High Level",
+                "Mountain",
+                "Ruins",
+                "Village",
+                "Wilderness",
+                "Wizard Tower"
+            ]
         },
-        "combat_1":{
-          "Display": "Spider's Den",
-          "Scoreboard":[
-            "Spider's Den"
-          ]
+        "combat_1": {
+            "Display": "Spider's Den",
+            "Scoreboard": [
+                "Spider's Den"
+            ]
         },
-        "combat_2":{
-          "Display": "Blazing Fortress",
-          "Scoreboard":[
-            "Blazing Fortress"
-          ]
+        "combat_2": {
+            "Display": "Blazing Fortress",
+            "Scoreboard": [
+                "Blazing Fortress"
+            ]
         },
-        "combat_3":{
-          "Display": "The End",
-          "Scoreboard":[
-            "The End",
-            "Dragon's Nest"
-          ]
+        "combat_3": {
+            "Display": "The End",
+            "Scoreboard": [
+                "The End",
+                "Dragon's Nest"
+            ]
         },
-        "foraging_1":{
-          "Display": "The Park",
-          "Scoreboard":[
-            "Birch Park",
-            "Howling Cave",
-            "Spruce Woods",
-            "Birch Park",
-            "Dark Thicket",
-            "Savanna Woodland",
-            "Jungle Island"
-          ]
+        "foraging_1": {
+            "Display": "The Park",
+            "Scoreboard": [
+                "Birch Park",
+                "Howling Cave",
+                "Spruce Woods",
+                "Birch Park",
+                "Dark Thicket",
+                "Savanna Woodland",
+                "Jungle Island"
+            ]
         },
-        "farming_1":{
-          "Display": "The Barn",
-          "Scoreboard":[
-            "The Barn"
-          ]
+        "farming_1": {
+            "Display": "The Barn",
+            "Scoreboard": [
+                "The Barn"
+            ]
         },
-        "farming_2":{
-          "Display": "Mushroom Desert",
-          "Scoreboard":[
-            "Mushroom Desert"
-          ]
+        "farming_2": {
+            "Display": "Mushroom Desert",
+            "Scoreboard": [
+                "Mushroom Desert"
+            ]
         },
-        "mining_1":{
-          "Display": "Gold Mine",
-          "Scoreboard":[
-            "Gold Mine"
-          ]
+        "mining_1": {
+            "Display": "Gold Mine",
+            "Scoreboard": [
+                "Gold Mine"
+            ]
         },
-        "mining_2":{
-          "Display": "Deep Caverns",
-          "Scoreboard":[
-            "Deep Caverns",
-            "Gunpowder Mines",
-            "Lapis Quarry",
-            "Pigmen's Den",
-            "Slimehill",
-            "Diamond Reserve",
-            "Obsidian Sanctuary"
-          ]
+        "mining_2": {
+            "Display": "Deep Caverns",
+            "Scoreboard": [
+                "Deep Caverns",
+                "Gunpowder Mines",
+                "Lapis Quarry",
+                "Pigmen's Den",
+                "Slimehill",
+                "Diamond Reserve",
+                "Obsidian Sanctuary"
+            ]
         },
-        "mining_3":{
-          "Display": "Dwarven Mines",
-          "Scoreboard":[
-            "Aristocrat Passage",
-            "Cliffside Veins",
-            "Divan's Gateway",
-            "Dwarven Mines",
-            "Dwarven Village",
-            "Far Reserve",
-            "Forge Basin",
-            "Goblin Burrows",
-            "Hanging Court",
-            "Palace Bridge",
-            "Rampaert's Quarry",
-            "Royal Mines",
-            "Royal Palace",
-            "Royal Quarters",
-            "The Forge",
-            "The Lift",
-            "The Mist",
-            "Upper Mines"
-          ]
+        "mining_3": {
+            "Display": "Dwarven Mines",
+            "Scoreboard": [
+                "Aristocrat Passage",
+                "Cliffside Veins",
+                "Divan's Gateway",
+                "Dwarven Mines",
+                "Dwarven Village",
+                "Far Reserve",
+                "Forge Basin",
+                "Goblin Burrows",
+                "Hanging Court",
+                "Palace Bridge",
+                "Rampaert's Quarry",
+                "Royal Mines",
+                "Royal Palace",
+                "Royal Quarters",
+                "The Forge",
+                "The Lift",
+                "The Mist",
+                "Upper Mines"
+            ]
         },
-        "winter":{
-          "Display": "Jerry's Workshop",
-          "Scoreboard":[
-      
-          ]
+        "winter": {
+            "Display": "Jerry's Workshop",
+            "Scoreboard": [
+
+            ]
         },
-        "dungeon_hub":{
-          "Display": "Dungeons Hub",
-          "Scoreboard":[
-      
-          ]
+        "dungeon_hub": {
+            "Display": "Dungeons Hub",
+            "Scoreboard": [
+
+            ]
         },
         "dynamic": {
             "Display": "Private island"
         }
-      }
+    }
 
 })
 
 
-let add_dashes_to_uuid =i=>i.substr(0,8)+"-"+i.substr(8,4)+"-"+i.substr(12,4)+"-"+i.substr(16,4)+"-"+i.substr(20);
+let add_dashes_to_uuid = i => i.substr(0, 8) + "-" + i.substr(8, 4) + "-" + i.substr(12, 4) + "-" + i.substr(16, 4) + "-" + i.substr(20);
 
 function urlToFile(url, destination, connecttimeout, readtimeout) {
     const d = new File(destination);
