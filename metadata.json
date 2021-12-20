@@ -3,6 +3,6 @@
   "description": "SBG Bot.",
   "author": "Soopyboo32",
   "entry": "index.js",
-  "version": "0.2.1",
+  "version": "0.2.4",
   "requires": []
 }
