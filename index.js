@@ -29,22 +29,27 @@ register("worldLoad", () => {
 
             if (currVer != latestVer) {
                 ChatLib.chat("Updatign sbgBot to version " + latestVer + "...")
-                new File("./config/ChatTriggers/modules/sbgBotTempDownload").mkdir()
+                if(!new File("./config/ChatTriggers/modules/sbgBot/.git").exists()){
 
-                urlToFile("http://soopymc.my.to/api/sbgBot/downloadLatest.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", 10000, 20000)
+                    new File("./config/ChatTriggers/modules/sbgBotTempDownload").mkdir()
 
-                FileLib.unzip("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/")
+                    urlToFile("http://soopymc.my.to/api/sbgBot/downloadLatest.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", 10000, 20000)
 
-                FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBot"))
+                    FileLib.unzip("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot.zip", "./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/")
 
-                new File("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/sbgBot").renameTo(new File("./config/ChatTriggers/modules/sbgBot"))
+                    FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBot"))
 
-                FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBotTempDownload"))
+                    new File("./config/ChatTriggers/modules/sbgBotTempDownload/sbgBot/sbgBot").renameTo(new File("./config/ChatTriggers/modules/sbgBot"))
 
-                Thread.sleep(1000)
+                    FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/sbgBotTempDownload"))
 
-                ChatLib.command("ct load", true)
-                return
+                    Thread.sleep(1000)
+
+                    ChatLib.command("ct load", true)
+                    return
+                }else{
+                    ChatLib.chat("Canceled update due to git folder, please manually update!")
+                }
             }
 
             let guild = res.guild
