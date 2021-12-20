@@ -1211,6 +1211,88 @@ register("worldLoad", () => {
                             name: "Warden Heart",
                             chance: 1
                         }
+                    ],
+                    sven: [
+                        {
+                            name: "Red Claw Egg",
+                            chance: 25
+                        },
+                        {
+                            name: "Couture Rune I",
+                            chance: 25
+                        },
+                        {
+                            name: "Grizzly Bait",
+                            chance: 7
+                        },
+                        {
+                            name:  "Overflux Capacitor",
+                            chance: 5
+                        }
+                    ],
+                    tara: [
+                        {
+                            name: "Fly Swatter",
+                            chance: 5
+                        },
+                        {
+                            name: "tarantula Talisman",
+                            chance: 5
+                        },
+                        {
+                            name:  "Digested Mosquito",
+                            chance: 2
+                        }
+                    ],
+                    diana: [
+                        {
+                            name: "100k Coins",
+                            chance: 23
+                        },
+                        {
+                            name: "250k Coins",
+                            chance: 19
+                        },
+                        {
+                            name: "500k Coins",
+                            chance: 17
+                        },
+                        {
+                            name: "750k Coins",
+                            chance: 15
+                        },
+                        {
+                            name: "Crown of Greed",
+                            chance: 13
+                        },
+                        {
+                            name: "Washed-up Souvenir",
+                            chance: 13
+                        },
+                        {
+                            name: "Antique Remedies",
+                            chance: 10
+                        },
+                        {
+                            name: "Crochet Tiger Plushie",
+                            chance: 10
+                        },
+                        {
+                            name: "Dwarf Turtle Shelmet",
+                            chance: 10
+                        },
+                        {
+                            name: "Daedalux Stick",
+                            chance: 5
+                        },
+                        {
+                            name: "Minos Relic",
+                            chance: 3
+                        },
+                        {
+                            name:  "Chimera I",
+                            chance: 1
+                        }
                     ]
                 }
 
