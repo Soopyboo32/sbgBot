@@ -8,8 +8,8 @@ const PrintStream = Java.type("java.io.PrintStream");
 const Byte = Java.type("java.lang.Byte");
 
 let isSoopy = Player.getUUID().toString().replace(/-/ig, "") === "dc8c39647b294e03ae9ed13ebd65dd29"
-let isSbgAdmin = isSoopy || Player.getUUID().toString().replace(/-/ig, "") === "b9d90392124048bb993f8f1b836657a8" || Player.getUUID().toString().replace(/-/ig, "") === "a80b52f6707a4f8286cabc6e95cf9fdf"
-let inSbg = isSbgAdmin
+// let isSbgAdmin = isSoopy || Player.getUUID().toString().replace(/-/ig, "") === "b9d90392124048bb993f8f1b836657a8" || Player.getUUID().toString().replace(/-/ig, "") === "a80b52f6707a4f8286cabc6e95cf9fdf"
+// let inSbg = isSbgAdmin
 // const ByteArrayInputStream = Java.type("java.io.ByteArrayInputStream");
 // const Base64 = Java.type("java.util.Base64");
 // const CompressedStreamTools = Java.type("net.minecraft.nbt.CompressedStreamTools");
