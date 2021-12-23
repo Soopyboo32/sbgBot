@@ -1301,7 +1301,9 @@ register("worldLoad", () => {
                     ]
                 }
 
-                let chosenArr = type === "all" ? flattenArr(Object.values(data)) : data[aliases[type] || type]
+                let allIncludes = ["tara", "sven", "rev", "eman"]
+
+                let chosenArr = type === "all" ? flattenArr(allIncludes.map(a=>data[a])) : data[aliases[type] || type]
 
                 let arrTotal = chosenArr.reduce((total, item) => total + item.chance, 0)
                 // console.log(arrTotal)
