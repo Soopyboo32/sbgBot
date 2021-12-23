@@ -1872,10 +1872,9 @@ register("worldLoad", () => {
             commandFunctions.lowestbin = function (player, command, args, reply) {
                 let vals = {}
 
+                args.shift()
+
                 args.forEach((arg) => {
-                    if (arg == "lowestbin") {
-                        return;
-                    }
                     Object.keys(lowestBins).forEach((lowestBin) => {
                         if (lowestBin.toLowerCase().includes(arg.toLowerCase())) {
                             if (vals[lowestBin] == undefined) { vals[lowestBin] = 0 }
