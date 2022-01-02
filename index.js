@@ -2381,13 +2381,15 @@ register("worldLoad", () => {
                 }
                 
                 let data2 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player_skyblock/" + (uuidData.id) + "?key=dee67f9c765cf8df&items"))
+                let data3 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/leaderboard/networth/user/" + (uuidData.id) + "?key=dee67f9c765cf8df&items"))
 
                 let nw = args[1] === "current" ? data2.data.profiles[data2.data.stats.currentProfileId].members[uuidData.id].soopyNetworth : data2.data.profiles[data2.data.stats.bestProfileId].members[uuidData.id].soopyNetworth
 
                 let totalnw = nw.networth
+                let position = (data3?.data?.data?.position)
                 // totalnw += data2.data.profiles[data2.data.stats.bestProfileId].stats.bank_balance || 0
 
-                reply(uuidData.name + "'s networth: " + (numberWithCommas(Math.floor(totalnw))))
+                reply(uuidData.name + "'s networth: $" + (numberWithCommas(Math.floor(totalnw))) + (position ? " (#" + numberWithCommas(position) + ")" : ""))
             }
 
             function getItemWorth(item) {
