@@ -68,7 +68,7 @@ register("worldLoad", () => {
                 "bin": "lowestbin",
                 "leaderboardposition": "lbpos",
                 "stoneof": "whatstone",
-                "nw": "networth",
+                "networth": "nw",
                 "bz": "bazzar",
                 "sc": "scammercheck",
                 "scammer": "scammercheck",
@@ -809,90 +809,89 @@ register("worldLoad", () => {
                     })
                 }
 
-                commandFunctionsNonGuild.networth = function (player, chatCommand, command, args) {
-                    if (args[1] === undefined) {
-                        args[1] = player
-                    }
+                // commandFunctionsNonGuild.networth = function (player, chatCommand, command, args) {
+                //     if (args[1] === undefined) {
+                //         args[1] = player
+                //     }
 
-                    let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
-                    try {
-                        let netWorth = 0
-                        let netWorthLast = 0
-
-
-                        function worthChangeVerift() {
-                            if (netWorth.toString() === "NaN" || netWorth.toString() === "undefined") {
-                                netWorth = netWorthLast
-                            }
-                            netWorthLast = netWorth
-                        }
-
-                        let items = []
-                        let pets = []
-
-                        Object.keys(data.profiles).forEach((profId) => {
-                            let itemStorage = ["wardrobe_inventory", "inventory", "enderchest", "talisman_bag", "fishing_bag", "quiver", "potion_bag", "storage"]
-                            let itemStorageReplace = {
-                                "wardrobe": "wardrobe_inventory",
-                                "ward": "wardrobe_inventory",
-                                "invent": "inventory",
-                                "inv": "inventory",
-                                "ec": "enderchest",
-                                "talis": "talisman_bag",
-                                "fish": "fishing_bag",
-                                "potion": "potion_bag"
-                            }
-                            itemStorage.forEach((itemLocation) => {
-                                data.profiles[profId].items[itemLocation].forEach((item) => {
-                                    if (args[2] === undefined || args[2].toLowerCase() === itemLocation || itemStorageReplace[args[2].toLowerCase()] === itemLocation) {
-                                        items.push({ ...item, "location": itemLocation })
-                                    }
-                                })
-                            })
-                            if (args[2] === undefined || args[2].toLowerCase() === "pets") {
-                                data.profiles[profId].data.pets.forEach((pet) => {
-                                    pets.push(pet)
-                                })
-                            }
-
-                            if (args[2] === undefined) {
-                                netWorth += data.profiles[profId].raw.coin_purse
-                                worthChangeVerift()
-                                netWorth += data.profiles[profId].data.bank
-                                worthChangeVerift()
-                                netWorth += data.profiles[profId].data.slayer_coins_spent.total
-                                worthChangeVerift()
-                            }
-                        })
-                        items.forEach((item) => {
-                            if (item.Count !== undefined) {
-                                netWorth += getItemWorth(item)
-                                worthChangeVerift()
-                            }
-                        })
-                        pets.forEach((pet) => {
-                            netWorth += getPetWorth(pet)
-                            worthChangeVerift()
-                        })
+                //     let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
+                //     try {
+                //         let netWorth = 0
+                //         let netWorthLast = 0
 
 
-                        netWorth = addNotation("oneLetters", netWorth)
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", " + (args[1] === player ? "You have" : args[1] + " has") + " a networth of $" + netWorth + "!"))
+                //         function worthChangeVerift() {
+                //             if (netWorth.toString() === "NaN" || netWorth.toString() === "undefined") {
+                //                 netWorth = netWorthLast
+                //             }
+                //             netWorthLast = netWorth
+                //         }
+
+                //         let items = []
+                //         let pets = []
+
+                //         Object.keys(data.profiles).forEach((profId) => {
+                //             let itemStorage = ["wardrobe_inventory", "inventory", "enderchest", "talisman_bag", "fishing_bag", "quiver", "potion_bag", "storage"]
+                //             let itemStorageReplace = {
+                //                 "wardrobe": "wardrobe_inventory",
+                //                 "ward": "wardrobe_inventory",
+                //                 "invent": "inventory",
+                //                 "inv": "inventory",
+                //                 "ec": "enderchest",
+                //                 "talis": "talisman_bag",
+                //                 "fish": "fishing_bag",
+                //                 "potion": "potion_bag"
+                //             }
+                //             itemStorage.forEach((itemLocation) => {
+                //                 data.profiles[profId].items[itemLocation].forEach((item) => {
+                //                     if (args[2] === undefined || args[2].toLowerCase() === itemLocation || itemStorageReplace[args[2].toLowerCase()] === itemLocation) {
+                //                         items.push({ ...item, "location": itemLocation })
+                //                     }
+                //                 })
+                //             })
+                //             if (args[2] === undefined || args[2].toLowerCase() === "pets") {
+                //                 data.profiles[profId].data.pets.forEach((pet) => {
+                //                     pets.push(pet)
+                //                 })
+                //             }
+
+                //             if (args[2] === undefined) {
+                //                 netWorth += data.profiles[profId].raw.coin_purse
+                //                 worthChangeVerift()
+                //                 netWorth += data.profiles[profId].data.bank
+                //                 worthChangeVerift()
+                //                 netWorth += data.profiles[profId].data.slayer_coins_spent.total
+                //                 worthChangeVerift()
+                //             }
+                //         })
+                //         items.forEach((item) => {
+                //             if (item.Count !== undefined) {
+                //                 netWorth += getItemWorth(item)
+                //                 worthChangeVerift()
+                //             }
+                //         })
+                //         pets.forEach((pet) => {
+                //             netWorth += getPetWorth(pet)
+                //             worthChangeVerift()
+                //         })
 
 
-                    } catch (e) {
-                        console.log(JSON.stringify(e))
-                        commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error!"))
-                    }
-                }
+                //         netWorth = addNotation("oneLetters", netWorth)
+                //         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", " + (args[1] === player ? "You have" : args[1] + " has") + " a networth of $" + netWorth + "!"))
+
+
+                //     } catch (e) {
+                //         console.log(JSON.stringify(e))
+                //         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error!"))
+                //     }
+                // }
 
                 commandFunctionsNonGuild.lowestbin = function (player, chatCommand, command, args) {
                     let vals = {}
 
+                    args.shift()
+
                     args.forEach((arg) => {
-                        if (arg == "lowestbin") {
-                            return;
-                        }
                         Object.keys(lowestBins).forEach((lowestBin) => {
                             if (lowestBin.toLowerCase().includes(arg.toLowerCase())) {
                                 if (vals[lowestBin] == undefined) { vals[lowestBin] = 0 }
@@ -2293,44 +2292,44 @@ register("worldLoad", () => {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + playerCheck + " is currently " + res))
                 }
             }
-            commandFunctions.networth = function (player, command, args) {
+            // commandFunctions.networth = function (player, command, args) {
 
-                let uuidData
-                try {
-                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
-                } catch (e) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
-                    }
-                    return;
-                }
-                let data2 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player_skyblock/" + (uuidData.id) + "/nw" + (args[2] === "current" ? "/current/" : "") + "?key=dee67f9c765cf8df"))
+            //     let uuidData
+            //     try {
+            //         uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
+            //     } catch (e) {
+            //         if (commandsSpeed > commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
+            //         }
+            //         return;
+            //     }
+            //     let data2 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player_skyblock/" + (uuidData.id) + "/nw" + (args[2] === "current" ? "/current/" : "") + "?key=dee67f9c765cf8df"))
 
-                let nw = args[2] === "current" ? data2.data.profiles[data2.data.stats.currentProfileId].members[uuidData.id].networth : data2.data.stats.networth
+            //     let nw = args[2] === "current" ? data2.data.profiles[data2.data.stats.currentProfileId].members[uuidData.id].networth : data2.data.stats.networth
 
-                let status = nw.status
-                let cause = nw.cause
+            //     let status = nw.status
+            //     let cause = nw.cause
 
-                if (status !== 200) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Status: " + status + ", cause: " + cause))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Status: " + status + ", cause: " + cause))
-                    }
-                    return;
-                }
+            //     if (status !== 200) {
+            //         if (commandsSpeed > commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Status: " + status + ", cause: " + cause))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Status: " + status + ", cause: " + cause))
+            //         }
+            //         return;
+            //     }
 
-                let totalnw = nw.total
-                // totalnw += data2.data.profiles[ args[2] === "current" ?data2.data.stats.currentProfileId:data2.data.stats.bestProfileId].stats.bank_balance || 0
+            //     let totalnw = nw.total
+            //     // totalnw += data2.data.profiles[ args[2] === "current" ?data2.data.stats.currentProfileId:data2.data.stats.bestProfileId].stats.bank_balance || 0
 
-                if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s (maro) networth: " + (numberWithCommas(Math.floor(totalnw)))))
-                } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + "'s (maro) networth: " + (numberWithCommas(Math.floor(totalnw)))))
-                }
-            }
+            //     if (commandsSpeed > commandsSpeedLimit) {
+            //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s (maro) networth: " + (numberWithCommas(Math.floor(totalnw)))))
+            //     } else {
+            //         commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + "'s (maro) networth: " + (numberWithCommas(Math.floor(totalnw)))))
+            //     }
+            // }
             commandFunctions.progress = function (player, command, args) {
                 args.shift()
                 let uuidData
@@ -2367,89 +2366,28 @@ register("worldLoad", () => {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + " has gained " + numberWithCommas(change) + " " + thing + " in the last week! (" + numberWithCommas(oD) + " -> " + numberWithCommas(cD) + ")"))
                 }
             }
-            commandFunctions.soopynw = function (player, command, args, reply) {
+            commandFunctions.nw = function (player, command, args, reply) {
                 if (args[1] === undefined) {
                     args[1] = player
                 }
 
-                let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
+                
+                let uuidData
                 try {
-                    let netWorth = 0
-                    let netWorthLast = 0
-
-
-                    function worthChangeVerift() {
-                        if (netWorth.toString() === "NaN" || netWorth.toString() === "undefined") {
-                            netWorth = netWorthLast
-                        }
-                        netWorthLast = netWorth
-                    }
-
-                    let items = []
-                    let pets = []
-
-                    Object.keys(data.profiles).forEach((profId) => {
-                        let itemStorage = ["wardrobe_inventory", "inventory", "enderchest", "talisman_bag", "fishing_bag", "quiver", "potion_bag", "storage"]
-                        let itemStorageReplace = {
-                            "wardrobe": "wardrobe_inventory",
-                            "ward": "wardrobe_inventory",
-                            "invent": "inventory",
-                            "inv": "inventory",
-                            "ec": "enderchest",
-                            "talis": "talisman_bag",
-                            "fish": "fishing_bag",
-                            "potion": "potion_bag"
-                        }
-                        itemStorage.forEach((itemLocation) => {
-                            data.profiles[profId].items[itemLocation].forEach((item) => {
-                                if (args[2] === undefined || args[2].toLowerCase() === itemLocation || itemStorageReplace[args[2].toLowerCase()] === itemLocation) {
-                                    items.push({ ...item, "location": itemLocation })
-                                }
-                            })
-                        })
-                        if (args[2] === undefined || args[2].toLowerCase() === "pets") {
-                            data.profiles[profId].data.pets.forEach((pet) => {
-                                pets.push(pet)
-                            })
-                        }
-
-                        if (args[2] === undefined) {
-                            netWorth += data.profiles[profId].raw.coin_purse
-                            worthChangeVerift()
-                            netWorth += data.profiles[profId].data.bank
-                            worthChangeVerift()
-                            netWorth += data.profiles[profId].data.slayer_coins_spent.total
-                            worthChangeVerift()
-                        }
-                    })
-                    items.forEach((item) => {
-                        if (item.Count !== undefined) {
-                            netWorth += getItemWorth(item)
-                            worthChangeVerift()
-                        }
-                    })
-                    pets.forEach((pet) => {
-                        netWorth += getPetWorth(pet)
-                        worthChangeVerift()
-                    })
-
-
-                    netWorth = addNotation("oneLetters", netWorth)
-
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (args[1] === player ? "You have" : args[1] + " has") + " a networth of $" + netWorth + "!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + (args[1] === player ? "You have" : args[1] + " has") + " a networth of $" + netWorth + "!"))
-                    }
-
+                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1])))
                 } catch (e) {
-                    console.log(JSON.stringify(e))
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot there was an error!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", there was an error!"))
-                    }
+                    reply("Invalid Username!")
+                    return;
                 }
+                
+                let data2 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player_skyblock/" + (uuidData.id) + "?key=dee67f9c765cf8df&items"))
+
+                let nw = args[1] === "current" ? data2.data.profiles[data2.data.stats.currentProfileId].members[uuidData.id].soopyNetworth : data2.data.profiles[data2.data.stats.bestProfileId].members[uuidData.id].soopyNetworth
+
+                let totalnw = nw.networth
+                // totalnw += data2.data.profiles[data2.data.stats.bestProfileId].stats.bank_balance || 0
+
+                reply(uuidData.name + "'s networth: " + (numberWithCommas(Math.floor(totalnw))))
             }
 
             function getItemWorth(item) {
