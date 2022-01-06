@@ -2386,7 +2386,7 @@ register("worldLoad", () => {
                 let nw = args[1] === "current" ? data2.data.profiles[data2.data.stats.currentProfileId].members[uuidData.id].soopyNetworth : data2.data.profiles[data2.data.stats.bestProfileId].members[uuidData.id].soopyNetworth
 
                 let totalnw = nw.networth
-                let position = (data3?.data?.data?.position)
+                let position = (data3?.data?.data?.position+1)
                 // totalnw += data2.data.profiles[data2.data.stats.bestProfileId].stats.bank_balance || 0
 
                 reply(uuidData.name + "'s networth: $" + (numberWithCommas(Math.floor(totalnw))) + (position ? " (#" + numberWithCommas(position) + ")" : ""))
