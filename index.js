@@ -2,6 +2,7 @@
 /// <reference lib="es2015" />
 export default "Nothing is here";
 import commandQueue from './command.js';
+import sbgBotServer from "./socketConnection"
 const File = Java.type("java.io.File")
 const URL = Java.type("java.net.URL");
 const PrintStream = Java.type("java.io.PrintStream");
@@ -83,8 +84,8 @@ register("worldLoad", () => {
                 "catacomb": "dungeon"
             }
 
-            let commandsSpeed = 0
-            let commandsSpeedLimit = 3
+            commandQueue.commandsSpeed = 0
+            commandQueue.commandsSpeedLimit = 3
 
             let lastUpdateLowestBins = 0
             let lastCommandOverLimit = false;
@@ -115,12 +116,12 @@ register("worldLoad", () => {
 
 
             register("tick", () => {
-                commandsSpeed *= 0.9997
-                if (commandsSpeed > commandsSpeedLimit) {
+                commandQueue.commandsSpeed *= 0.9997
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                     if (!lastCommandOverLimit) {
                         lastCommandOverLimit = true
 
-                        commandsSpeed++
+                        commandQueue.commandsSpeed++
                         //commandQueue.other.push(spamBypass("/gc @everyone, bot messages in guild chat have been moved to dms due to spam"))
                     }
                 } else {
@@ -249,23 +250,27 @@ register("worldLoad", () => {
             // }).setChatCriteria("&r&2Guild > ${*}")
 
             register("chat", (player, message) => {
-                if (message.substr(0, 1) !== "-" && message.substr(0, 1) !== "/") { return }
                 player = player.replace(/(\[[MVIP&0123456789ABCDEFLMNOabcdeflmnor\+]+\])+? /g, "").replace(/\[[A-z]*\]/g, "").replace(/(&[0123456789ABCDEFLMNOabcdeflmnor])|\[|\]| |\+/g, "")
-                message = message.substr(1, message.length - 1)
                 message = message.replace(/ (.)\1+$/g, "").trim()
-                let args = message.split(" ")
-                let command = args[0]
-
-                ranCommand(player, command, args)
+                if(message.startsWith("-") || message.startsWith("/")){
+                    let message2 = message.substring(1)
+                    let args = message2.split(" ")
+                    let command = args[0]
+                    ranCommand(player, command, args)
+                }
+                runCommand2(player, message)
 
             }).setChatCriteria("&r&2Guild > ${player}&f: &r${message}&r")
 
+            function runCommand2(player, message){
+                sbgBotServer.sendMessage(player, message)
+            }
 
             function ranCommand(player, command, args) {
 
                 new Thread(() => {
                     Thread.sleep((commandQueue.other.length + commandQueue.dm.length) * 100)
-                    commandsSpeed++
+                    commandQueue.commandsSpeed++
 
                     let tcommand = commandFunctions[command] || commandFunctions[commandAlias[command]]
 
@@ -280,7 +285,7 @@ register("worldLoad", () => {
                         let res = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/shouldRunCommand.json?key=lkRFxoMYwrkgovPRn2zt&command=" + sha256(player + ": " + args.join(" "))))
                         if (res.result) {
                             tcommand(player, command, args, (message) => {
-                                if (commandsSpeed > commandsSpeedLimit) {
+                                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + message))
                                 } else {
                                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + message))
@@ -438,618 +443,618 @@ register("worldLoad", () => {
                 "ur iq: 0"
             ]
 
-            if (isSoopy || Player.getUUID().toString().replace(/-/g, "") === "9e05662285e34504bafac91a7cbfd501") { //owoenz
-
-
-                //-----------------------------------------------------
-                //             SOOPY BOT POGGGGGGGGGGGGG
-                //-----------------------------------------------------
-
-                register("chat", (player, message) => {
-                    if (message.substr(0, 1) !== "-" && message.substr(0, 1) !== "/") { return }
-                    player = player.replace(/(\[[MVIP&0123456789ABCDEFLMNOabcdeflmnor\+]+\])+? /g, "").replace(/\[[A-z]*\]/g, "").replace(/(&[0123456789ABCDEFLMNOabcdeflmnor])|\[|\]| |\+/g, "")
-                    message = message.substr(1, message.length - 1)
-                    let args = message.split(" ")
-                    let command = args[0]
-
-                    ranCommandNonGuild(player, "pc", command, args)
-
-                }).setChatCriteria("&r&9Party &8> ${player}&f: &r${message}&r")
-                register("chat", (player, message) => {
-                    if (message.substr(0, 1) !== "-" && message.substr(0, 1) !== "/") { return }
-                    player = player.replace(/(\[[MVIP&0123456789ABCDEFLMNOabcdeflmnor\+]+\])+? /g, "").replace(/\[[A-z]*\]/g, "").replace(/(&[0123456789ABCDEFLMNOabcdeflmnor])|\[|\]| |\+/g, "")
-                    message = message.substr(1, message.length - 1)
-                    let args = message.split(" ")
-                    let command = args[0]
-
-                    ranCommandNonGuild(player, "msg " + player, command, args)
-
-                }).setChatCriteria("&dFrom &r${player}&r&7: &r&7${message}&r")//&dFrom &r&b[MVP&r&d+&r&b] VoomDilles&r&7: &r&7/google Boobs&r
-
-
-                function ranCommandNonGuild(player, responceCommand, command, args) {
-                    new Thread(() => {
-                        if (commandFunctionsNonGuild[command] == undefined) {
-                            if (commandFunctionsNonGuild[commandAlias[command]] == undefined) {
-                                //commandQueue.other.push(spamBypass("/gc @" + player + ", " + command + " is not a valid command!"))
-                            } else {
-                                commandFunctionsNonGuild[commandAlias[command]](player, responceCommand, command, args)
-                            }
-                        } else {
-                            commandFunctionsNonGuild[command](player, responceCommand, command, args)
-                            return;
-                        }
-                    }).start()
-                }
-
-                // commandFunctionsNonGuild.getbot = function(player, chatCommand, command, args) {
-
-                //     let bot = []
-                //     let leftBots = fragrunbots
-                //     for(let i = 0;i<Math.min(10,parseInt(args[1] || "1"));i++){
-                //         if(leftBots.length === 0){
-                //             break;
-                //         }
-                //         let rBot = leftBots[Math.floor(Math.random()*leftBots.length)]
-                //         bot.push(rBot)
-                //         leftBots = leftBots.filter(a=>a!==rBot)
-                //     }
-                //     if(bot.length > 0){
-                //         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Random frag bot" + (bot.length>1?"s are ":" is ") + bot.join(", ") + "!"))
-                //     }else{
-                //         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", There are no online fragbots!"))
-                //     }
-                // }
-                commandFunctionsNonGuild.whatdoing = function (player, chatCommand, command, args) {
-                    let playerCheck = args[1] || player
-
-                    let res = ""
-
-                    let playerData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=player?name=" + playerCheck.replace("_", "^")))
-                    let playerUUID = ""
-
-                    if (!playerData.success) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data: " + playerData.reason))
-                        return;
-                    }
-                    if (!playerData.data.success) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data! (PlayerData)"))
-                        return;
-                    }
-
-                    if (playerData.data.player == null) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data (Invalid player?)"))
-                        return;
-                    }
-
-                    playerUUID = playerData.data.player.uuid
-
-                    let skyblockData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=skyblock_profiles?uuid=" + playerUUID))
-
-                    if (!skyblockData.success) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data: " + skyblockData.reason))
-                        return;
-                    }
-                    if (!skyblockData.data.success) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data! (SbData)"))
-                        return;
-                    }
-
-                    let last_save = 0
-
-                    let playerProfile = skyblockData.data?.profiles[0] || {}
-                    skyblockData.data.profiles.forEach((profile) => {
-                        if (profile.members[playerUUID].last_save > last_save) {
-                            last_save = profile.members[playerUUID].last_save
-                            playerProfile = profile
-                        }
-                    })
-                    let playerProf = playerProfile.members[playerUUID]
-
-                    let statusData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=status?uuid=" + playerUUID))
-
-                    if (statusData.data.session.online) {
-                        if (statusData.data.session.gameType === "SKYBLOCK") {
-                            switch (statusData.data.session.mode) {
-                                case "combat_1":
-                                    if (playerProf?.slayer_quest?.type === "spider") {
-                                        res = `doing t${playerProf.slayer_quest.tier + 1} tarantulas`
-                                        break;
-                                    }
-                                case "hub":
-                                    if (playerProf?.slayer_quest?.type === "wolf") {
-                                        res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the hub)`
-                                        break;
-                                    }
-                                    if (playerProf?.slayer_quest?.type === "zombie") {
-                                        res = `doing t${playerProf.slayer_quest.tier + 1} revs`
-                                        break;
-                                    }
-                                case "foraging_1":
-                                    if (playerProf?.slayer_quest?.type === "wolf") {
-                                        res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the park)`
-                                        break;
-                                    }
-                                default:
-                                    res = "playing " + statusData.data.session.gameType + " (" + (areaData[statusData.data.session.mode] ? areaData[statusData.data.session.mode].Display || (statusData.data.session.mode) : statusData.data.session.mode) + ")"
-                                    break;
-                            }
-                        } else {
-                            res = "playing " + statusData.data.session.gameType + " " + statusData.data.session.mode
-                        }
-                    } else {
-                        res = "offline"
-                    }
-
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", " + playerCheck + " is currently " + res))
-                }
-                commandFunctionsNonGuild.math = function (player, chatCommand, command, args) {
-                    if (args === undefined) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", invalid equasion!"))
-                    }
-
-                    args.shift()
-
-                    let res;
-                    try {
-                        res = FileLib.getUrlContent("http://api.mathjs.org/v4/?expr=" + encodeURIComponent(args.join(" ")))
-                    } catch (e) {
-                        res = mathBad[Math.floor(Math.random() * mathBad.length)]
-                    }
-
-                    if (/[0-9]\.?[0-9]*e\+[0-9]+/.test(res)) {
-                        res = numberWithCommas(parseFloat(res))
-                    }
-
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + res))
-                }
-                commandFunctions.google = function (player, command, args, reply) {
-                    if (args[1] == undefined) {
-                        if (commandsSpeed > commandsSpeedLimit) {
-                            commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot enter question!"))
-                        } else {
-                            commandQueue.other.push(spamBypass("/gc @" + player + ", enter question!"))
-                        }
-                        return;
-                    }
-
-                    let question = ""
-                    let first = true
-
-                    args.forEach((a) => {
-                        if (!first) {
-                            question += (question === "" ? "" : " ") + a
-                        }
-                        first = false
-                    })
-
-                    let reset
-                    try {
-                        res = FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/googleResult.json?i=" + encodeURIComponent(question)).replace("Wolfram|Alpha did not understand your input", "there was an error with your question!")
-                    } catch (e) {
-                        if (commandsSpeed > commandsSpeedLimit) {
-                            commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot there was an error with your question!"))
-                        } else {
-                            commandQueue.other.push(spamBypass("/gc @" + player + ", there was an error with your question!"))
-                        }
-                        return;
-                    }
-
-                    let responce = [""]
-
-                    res.split(" ").forEach((a) => {
-                        if ((responce[responce.length - 1] + a).length > 150) {
-                            responce.push(a)
-                        } else {
-                            responce[responce.length - 1] += " " + a
-                        }
-                    })
-
-                    responce.forEach((a) => {
-                        if (commandsSpeed > commandsSpeedLimit) {
-                            commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + a))
-                        } else {
-                            commandQueue.other.push(spamBypass("/gc @" + player + ", " + a))
-                        }
-                    })
-                }
-                commandFunctions.question = function (player, command, args, reply) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + ((args.join().length % 2) === 1 ? "yes" : "no") + "!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + ((args.join().length % 2) === 1 ? "yes" : "no") + "!"))
-                    }
-                }
-                //
-                // commandFunctions.irlworth = function(player, command, args, reply) {
-                //     if(args[1] === undefined){
-                //         args[1] = 1000000
-                //     }else{
-                //         args[1] = parseFloat(args[1])
-                //     }
-
-                //     if (commandsSpeed > commandsSpeedLimit) {
-                //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Fetchur is currently " + (data?data:"Unknown") + "."))
-                //     } else {
-                //         commandQueue.dm.push(spamBypass("/gc @" + player + ", Fetchur is currently " + (data?data:"Unknown") + "."))
-                //     }
-                // }
-
-                commandFunctionsNonGuild.joke = function (player, chatCommand, command, args) {
-                    if (args[1] == "player") {
-                        if (args[2] == undefined) {
-                            commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.value.joke))
-                            return;
-                        }
-                        if (args[3] == undefined) {
-                            args[3] = ""
-                        }
-                        let joke = JSON.parse(FileLib.getUrlContent("http://api.icndb.com/jokes/random?firstName=" + args[2] + "&lastName=" + args[3] + "&escape=javascript"))
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.value.joke))
-                        return;
-                    }
-
-                    if (Math.random() < 0.05) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Here is the funniest joke i know..."))
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + player))
-                        return
-                    }
-                    let joke = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/joke.json"))
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.data.setup))
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.data.punchline))
-                }
-
-                commandFunctionsNonGuild.soopyaddons = function (player, chatCommand, command, args) {
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", CT is Pepega"))
-                }
-
-                commandFunctionsNonGuild.scammercheck = function (player, chatCommand, command, args) {
-                    if (args[1] === undefined) {
-                        args[1] = player
-                    }
-
-                    let playerUUID;
-                    try {
-                        playerUUID = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + args[1])).id
-                    } catch (e) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Invalid player"))
-                        return;
-                    }
-                    let isScammer = scammerData[playerUUID] !== undefined
-
-                    if (!isScammer) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " not a scammer"))
-                    } else {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " a scammer"))
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Reason: " + scammerData[playerUUID].reason))
-                    }
-                }
-                commandFunctionsNonGuild.missingpets = function (player, chatCommand, command, args) {
-                    if (args[1] === undefined) {
-                        args[1] = player
-                    }
-
-                    let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
-
-                    let profile = ""
-                    Object.keys(data.profiles).forEach((profileId) => {
-                        if (data.profiles[profileId].current) {
-                            profile = profileId
-                        }
-                    })
-
-                    let missingPets = data.profiles[profile].data.missingPets
-
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingPets.length + " pets!"))
-                    if (missingPets.length > 0) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", (" + missingPets.slice(0, 5).map(pet => pet.display_name).join(" | ") + (missingPets.length > 5 ? " | and " + (missingPets.length - 5) + " more" : "") + ")"))
-                    }
-                }
-                commandFunctionsNonGuild.fetchur = function (player, chatCommand, command, args) {
-
-                    let fletcherMessages2 = [
-                        "50 red wool",
-                        "20 yellow stained glass",
-                        "1 compass",
-                        "20 mythril",
-                        "1 firework rocket",
-                        "1 cheap coffee or decent coffee",
-                        "1 wooden door",
-                        "3 rabbits feet",
-                        "1 superboom tnt",
-                        "1 pumpkin",
-                        "1 flint and steel",
-                        "50 nether quartz ore",
-                        "16 ender pearl"
-                    ]
-                    let currFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
-                    let willChangeIn = (1000 * 60 * 60 * 24) - ((Date.now() - 1613624400000) % (1000 * 60 * 60 * 24))
-                    let changeH = Math.floor(willChangeIn / (1000 * 60 * 60))
-                    let changeM = Math.floor(willChangeIn % (1000 * 60 * 60) / 1000 / 60)
-                    let willChangeInText = changeH + " hour" + (changeH === 1 ? "" : "s") + " " + changeM + " min" + (changeM === 1 ? "" : "s")
-                    let nextFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60 + (1000 * 60 * 60 * 24)).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
-                    commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
-                }
-                commandFunctionsNonGuild.google = function (player, chatCommand, command, args) {
-                    if (args[1] == undefined) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", enter question!"))
-                        return;
-                    }
-
-                    let question = ""
-                    let first = true
-
-                    args.forEach((a) => {
-                        if (!first) {
-                            question += (question === "" ? "" : " ") + a
-                        }
-                        first = false
-                    })
-
-                    let reset
-                    try {
-                        res = FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/googleResult.json?i=" + encodeURIComponent(question)).replace("Wolfram|Alpha did not understand your input", "there was an error with your question!")
-                    } catch (e) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error with your question!"))
-                        return;
-                    }
-
-                    let responce = [""]
-
-                    res.split(" ").forEach((a) => {
-                        if ((responce[responce.length - 1] + a).length > 150) {
-                            responce.push(a)
-                        } else {
-                            responce[responce.length - 1] += " " + a
-                        }
-                    })
-
-                    responce.forEach((a) => {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + a))
-                    })
-                }
-
-                // commandFunctionsNonGuild.networth = function (player, chatCommand, command, args) {
-                //     if (args[1] === undefined) {
-                //         args[1] = player
-                //     }
-
-                //     let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
-                //     try {
-                //         let netWorth = 0
-                //         let netWorthLast = 0
-
-
-                //         function worthChangeVerift() {
-                //             if (netWorth.toString() === "NaN" || netWorth.toString() === "undefined") {
-                //                 netWorth = netWorthLast
-                //             }
-                //             netWorthLast = netWorth
-                //         }
-
-                //         let items = []
-                //         let pets = []
-
-                //         Object.keys(data.profiles).forEach((profId) => {
-                //             let itemStorage = ["wardrobe_inventory", "inventory", "enderchest", "talisman_bag", "fishing_bag", "quiver", "potion_bag", "storage"]
-                //             let itemStorageReplace = {
-                //                 "wardrobe": "wardrobe_inventory",
-                //                 "ward": "wardrobe_inventory",
-                //                 "invent": "inventory",
-                //                 "inv": "inventory",
-                //                 "ec": "enderchest",
-                //                 "talis": "talisman_bag",
-                //                 "fish": "fishing_bag",
-                //                 "potion": "potion_bag"
-                //             }
-                //             itemStorage.forEach((itemLocation) => {
-                //                 data.profiles[profId].items[itemLocation].forEach((item) => {
-                //                     if (args[2] === undefined || args[2].toLowerCase() === itemLocation || itemStorageReplace[args[2].toLowerCase()] === itemLocation) {
-                //                         items.push({ ...item, "location": itemLocation })
-                //                     }
-                //                 })
-                //             })
-                //             if (args[2] === undefined || args[2].toLowerCase() === "pets") {
-                //                 data.profiles[profId].data.pets.forEach((pet) => {
-                //                     pets.push(pet)
-                //                 })
-                //             }
-
-                //             if (args[2] === undefined) {
-                //                 netWorth += data.profiles[profId].raw.coin_purse
-                //                 worthChangeVerift()
-                //                 netWorth += data.profiles[profId].data.bank
-                //                 worthChangeVerift()
-                //                 netWorth += data.profiles[profId].data.slayer_coins_spent.total
-                //                 worthChangeVerift()
-                //             }
-                //         })
-                //         items.forEach((item) => {
-                //             if (item.Count !== undefined) {
-                //                 netWorth += getItemWorth(item)
-                //                 worthChangeVerift()
-                //             }
-                //         })
-                //         pets.forEach((pet) => {
-                //             netWorth += getPetWorth(pet)
-                //             worthChangeVerift()
-                //         })
-
-
-                //         netWorth = addNotation("oneLetters", netWorth)
-                //         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", " + (args[1] === player ? "You have" : args[1] + " has") + " a networth of $" + netWorth + "!"))
-
-
-                //     } catch (e) {
-                //         console.log(JSON.stringify(e))
-                //         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error!"))
-                //     }
-                // }
-
-                commandFunctionsNonGuild.lowestbin = function (player, chatCommand, command, args) {
-                    let vals = {}
-
-                    args.shift()
-
-                    args.forEach((arg) => {
-                        Object.keys(lowestBins).forEach((lowestBin) => {
-                            if (lowestBin.toLowerCase().includes(arg.toLowerCase())) {
-                                if (vals[lowestBin] == undefined) { vals[lowestBin] = 0 }
-                                vals[lowestBin]++
-                                if (lowestBin.includes("STARRED")) {
-                                    vals[lowestBin] -= 0.1
-                                }
-                            }
-                        })
-                    })
-
-                    let topItem = undefined
-                    let topScore = 0;
-
-                    Object.keys(vals).forEach((val) => {
-                        if (vals[val] > topScore) {
-                            topItem = val
-                            topScore = vals[val]
-                        }
-                    })
-
-                    if (topItem === undefined) {
-                        commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", no auctions found!"))
-                        return;
-                    }
-
-                    let itemName = topItem.replace(/_/g, " ").toLowerCase()
-                    itemName = itemName.substr(0, 1).toUpperCase() + itemName.substr(1)
-
-                    commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", Cheapest bin for " + itemName + " is " + numberWithCommas(lowestBins[topItem]) + "!"))
-
-                }
-                commandFunctionsNonGuild.talismans = function (player, chatCommand, command, args) {
-                    let playerScan = player
-                    if (args[1] !== undefined) {
-                        playerScan = args[1]
-                    }
-
-                    let stats1 = JSON.parse(FileLib.getUrlContent("https://api.slothpixel.me/api/players/" + playerScan))
-                    if (stats1.error === "Player does not exist") {
-                        commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid player!"))
-                        return;
-                    }
-                    let stats = JSON.parse(FileLib.getUrlContent("https://api.slothpixel.me/api/skyblock/profile/" + playerScan))
-
-                    let talisData = {}
-
-                    let messageGChat = ""
-
-                    try {
-                        let uuid = stats1.uuid
-                        let playerName = stats1.username
-
-                        let talisData = stats.members[uuid].talisman_bag
-
-                        let totalTalis = 0
-                        let totalRecombedTalis = 0
-
-                        talisData.forEach((talis) => {
-                            if (talis.attributes === undefined) {
-                                return;
-                            }
-                            totalTalis++
-                            totalRecombedTalis += talis.attributes.rarity_upgrades == 1 ? 1 : 0
-                        })
-
-                        messageGChat = playerName + " has a total of " + totalTalis + " talismans (" + totalRecombedTalis + " recombed)"
-                    } catch (err) {
-                        console.log(JSON.stringify(err))
-                        messageGChat = "There was a error :("
-                    }
-
-                    commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + messageGChat))
-
-                }
-                commandFunctionsNonGuild.skill = function (player, chatCommand, command, args) {
-                    if (args[1] === undefined || args[2] === undefined) {
-                        commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", requires 2 arguments!"))
-                        return;
-                    }
-                    let skillReplace = {
-                        "dungeon": "dungeoneering",
-                        "catacombs": "dungeoneering"
-                    }
-                    if (skillReplace[args[1]] !== undefined) {
-                        args[1] = skillReplace[args[1]]
-                    }
-
-                    if (skillData.collections[args[1].toUpperCase()] === undefined) {
-                        commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill type!"))
-                        return;
-                    }
-
-                    args[2] = parseInt(args[2]) - 1
-
-
-                    if (args[3] !== undefined) {
-                        args[3] = parseInt(args[3]) - 1
-
-                        if (skillData.collections[args[1].toUpperCase()].levels[args[3]] === undefined) {
-                            commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill level!"))
-                            return;
-                        }
-
-                        let needExp = 0
-                        if (args[2] === -1) {
-                            needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired)
-                        } else {
-
-                            if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
-                                commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill level!"))
-                                return;
-                            }
-                            needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired - skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired)
-                        }
-
-
-                        let expinfo = "it takes " + needExp + " exp to go from " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " -> " + (args[3] + 1)
-                        commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + expinfo))
-                        return;
-                    }
-                    if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
-                        commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill level!"))
-                        return;
-                    }
-
-                    Thread.sleep(500)
-
-                    commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " (" + addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired) + " exp)"))
-                    skillData.collections[args[1].toUpperCase()].levels[args[2]].unlocks.forEach((unlock) => {
-                        commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + unlock))
-                    })
-                }
-                commandFunctionsNonGuild.help = function (player, chatCommand, command, args) {
-
-                    if (args[1] === undefined) {
-                        commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Possible commands are:"))
-                        Object.keys(commandFunctionsNonGuild).forEach((commandF) => {
-                            commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + commandF))
-                        })
-                    } else {
-                        switch (args[1]) {
-                            // case "aliases":
-
-                            //     commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot Command aliases "))
-                            //     Object.keys(commandAlias).forEach((alias) => {
-                            //         commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot " + alias + " runs " + commandAlias[alias]))
-                            //     })
-                            //     break;
-
-                            default:
-
-                                commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot Help for command " + args[1]))
-                                break;
-                        }
-                    }
-                }
-            }
+            // if (isSoopy || Player.getUUID().toString().replace(/-/g, "") === "9e05662285e34504bafac91a7cbfd501") { //owoenz
+
+
+            //     //-----------------------------------------------------
+            //     //             SOOPY BOT POGGGGGGGGGGGGG
+            //     //-----------------------------------------------------
+
+            //     register("chat", (player, message) => {
+            //         if (message.substr(0, 1) !== "-" && message.substr(0, 1) !== "/") { return }
+            //         player = player.replace(/(\[[MVIP&0123456789ABCDEFLMNOabcdeflmnor\+]+\])+? /g, "").replace(/\[[A-z]*\]/g, "").replace(/(&[0123456789ABCDEFLMNOabcdeflmnor])|\[|\]| |\+/g, "")
+            //         message = message.substr(1, message.length - 1)
+            //         let args = message.split(" ")
+            //         let command = args[0]
+
+            //         ranCommandNonGuild(player, "pc", command, args)
+
+            //     }).setChatCriteria("&r&9Party &8> ${player}&f: &r${message}&r")
+            //     register("chat", (player, message) => {
+            //         if (message.substr(0, 1) !== "-" && message.substr(0, 1) !== "/") { return }
+            //         player = player.replace(/(\[[MVIP&0123456789ABCDEFLMNOabcdeflmnor\+]+\])+? /g, "").replace(/\[[A-z]*\]/g, "").replace(/(&[0123456789ABCDEFLMNOabcdeflmnor])|\[|\]| |\+/g, "")
+            //         message = message.substr(1, message.length - 1)
+            //         let args = message.split(" ")
+            //         let command = args[0]
+
+            //         ranCommandNonGuild(player, "msg " + player, command, args)
+
+            //     }).setChatCriteria("&dFrom &r${player}&r&7: &r&7${message}&r")//&dFrom &r&b[MVP&r&d+&r&b] VoomDilles&r&7: &r&7/google Boobs&r
+
+
+            //     function ranCommandNonGuild(player, responceCommand, command, args) {
+            //         new Thread(() => {
+            //             if (commandFunctionsNonGuild[command] == undefined) {
+            //                 if (commandFunctionsNonGuild[commandAlias[command]] == undefined) {
+            //                     //commandQueue.other.push(spamBypass("/gc @" + player + ", " + command + " is not a valid command!"))
+            //                 } else {
+            //                     commandFunctionsNonGuild[commandAlias[command]](player, responceCommand, command, args)
+            //                 }
+            //             } else {
+            //                 commandFunctionsNonGuild[command](player, responceCommand, command, args)
+            //                 return;
+            //             }
+            //         }).start()
+            //     }
+
+            //     // commandFunctionsNonGuild.getbot = function(player, chatCommand, command, args) {
+
+            //     //     let bot = []
+            //     //     let leftBots = fragrunbots
+            //     //     for(let i = 0;i<Math.min(10,parseInt(args[1] || "1"));i++){
+            //     //         if(leftBots.length === 0){
+            //     //             break;
+            //     //         }
+            //     //         let rBot = leftBots[Math.floor(Math.random()*leftBots.length)]
+            //     //         bot.push(rBot)
+            //     //         leftBots = leftBots.filter(a=>a!==rBot)
+            //     //     }
+            //     //     if(bot.length > 0){
+            //     //         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Random frag bot" + (bot.length>1?"s are ":" is ") + bot.join(", ") + "!"))
+            //     //     }else{
+            //     //         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", There are no online fragbots!"))
+            //     //     }
+            //     // }
+            //     commandFunctionsNonGuild.whatdoing = function (player, chatCommand, command, args) {
+            //         let playerCheck = args[1] || player
+
+            //         let res = ""
+
+            //         let playerData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=player?name=" + playerCheck.replace("_", "^")))
+            //         let playerUUID = ""
+
+            //         if (!playerData.success) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data: " + playerData.reason))
+            //             return;
+            //         }
+            //         if (!playerData.data.success) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data! (PlayerData)"))
+            //             return;
+            //         }
+
+            //         if (playerData.data.player == null) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data (Invalid player?)"))
+            //             return;
+            //         }
+
+            //         playerUUID = playerData.data.player.uuid
+
+            //         let skyblockData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=skyblock_profiles?uuid=" + playerUUID))
+
+            //         if (!skyblockData.success) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data: " + skyblockData.reason))
+            //             return;
+            //         }
+            //         if (!skyblockData.data.success) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", Error fetching data! (SbData)"))
+            //             return;
+            //         }
+
+            //         let last_save = 0
+
+            //         let playerProfile = skyblockData.data?.profiles[0] || {}
+            //         skyblockData.data.profiles.forEach((profile) => {
+            //             if (profile.members[playerUUID].last_save > last_save) {
+            //                 last_save = profile.members[playerUUID].last_save
+            //                 playerProfile = profile
+            //             }
+            //         })
+            //         let playerProf = playerProfile.members[playerUUID]
+
+            //         let statusData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=status?uuid=" + playerUUID))
+
+            //         if (statusData.data.session.online) {
+            //             if (statusData.data.session.gameType === "SKYBLOCK") {
+            //                 switch (statusData.data.session.mode) {
+            //                     case "combat_1":
+            //                         if (playerProf?.slayer_quest?.type === "spider") {
+            //                             res = `doing t${playerProf.slayer_quest.tier + 1} tarantulas`
+            //                             break;
+            //                         }
+            //                     case "hub":
+            //                         if (playerProf?.slayer_quest?.type === "wolf") {
+            //                             res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the hub)`
+            //                             break;
+            //                         }
+            //                         if (playerProf?.slayer_quest?.type === "zombie") {
+            //                             res = `doing t${playerProf.slayer_quest.tier + 1} revs`
+            //                             break;
+            //                         }
+            //                     case "foraging_1":
+            //                         if (playerProf?.slayer_quest?.type === "wolf") {
+            //                             res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the park)`
+            //                             break;
+            //                         }
+            //                     default:
+            //                         res = "playing " + statusData.data.session.gameType + " (" + (areaData[statusData.data.session.mode] ? areaData[statusData.data.session.mode].Display || (statusData.data.session.mode) : statusData.data.session.mode) + ")"
+            //                         break;
+            //                 }
+            //             } else {
+            //                 res = "playing " + statusData.data.session.gameType + " " + statusData.data.session.mode
+            //             }
+            //         } else {
+            //             res = "offline"
+            //         }
+
+            //         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", " + playerCheck + " is currently " + res))
+            //     }
+            //     commandFunctionsNonGuild.math = function (player, chatCommand, command, args) {
+            //         if (args === undefined) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", invalid equasion!"))
+            //         }
+
+            //         args.shift()
+
+            //         let res;
+            //         try {
+            //             res = FileLib.getUrlContent("http://api.mathjs.org/v4/?expr=" + encodeURIComponent(args.join(" ")))
+            //         } catch (e) {
+            //             res = mathBad[Math.floor(Math.random() * mathBad.length)]
+            //         }
+
+            //         if (/[0-9]\.?[0-9]*e\+[0-9]+/.test(res)) {
+            //             res = numberWithCommas(parseFloat(res))
+            //         }
+
+            //         commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + res))
+            //     }
+            //     commandFunctions.google = function (player, command, args, reply) {
+            //         if (args[1] == undefined) {
+            //             if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot enter question!"))
+            //             } else {
+            //                 commandQueue.other.push(spamBypass("/gc @" + player + ", enter question!"))
+            //             }
+            //             return;
+            //         }
+
+            //         let question = ""
+            //         let first = true
+
+            //         args.forEach((a) => {
+            //             if (!first) {
+            //                 question += (question === "" ? "" : " ") + a
+            //             }
+            //             first = false
+            //         })
+
+            //         let reset
+            //         try {
+            //             res = FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/googleResult.json?i=" + encodeURIComponent(question)).replace("Wolfram|Alpha did not understand your input", "there was an error with your question!")
+            //         } catch (e) {
+            //             if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot there was an error with your question!"))
+            //             } else {
+            //                 commandQueue.other.push(spamBypass("/gc @" + player + ", there was an error with your question!"))
+            //             }
+            //             return;
+            //         }
+
+            //         let responce = [""]
+
+            //         res.split(" ").forEach((a) => {
+            //             if ((responce[responce.length - 1] + a).length > 150) {
+            //                 responce.push(a)
+            //             } else {
+            //                 responce[responce.length - 1] += " " + a
+            //             }
+            //         })
+
+            //         responce.forEach((a) => {
+            //             if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + a))
+            //             } else {
+            //                 commandQueue.other.push(spamBypass("/gc @" + player + ", " + a))
+            //             }
+            //         })
+            //     }
+            //     commandFunctions.question = function (player, command, args, reply) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + ((args.join().length % 2) === 1 ? "yes" : "no") + "!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", " + ((args.join().length % 2) === 1 ? "yes" : "no") + "!"))
+            //         }
+            //     }
+            //     //
+            //     // commandFunctions.irlworth = function(player, command, args, reply) {
+            //     //     if(args[1] === undefined){
+            //     //         args[1] = 1000000
+            //     //     }else{
+            //     //         args[1] = parseFloat(args[1])
+            //     //     }
+
+            //     //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //     //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Fetchur is currently " + (data?data:"Unknown") + "."))
+            //     //     } else {
+            //     //         commandQueue.dm.push(spamBypass("/gc @" + player + ", Fetchur is currently " + (data?data:"Unknown") + "."))
+            //     //     }
+            //     // }
+
+            //     commandFunctionsNonGuild.joke = function (player, chatCommand, command, args) {
+            //         if (args[1] == "player") {
+            //             if (args[2] == undefined) {
+            //                 commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.value.joke))
+            //                 return;
+            //             }
+            //             if (args[3] == undefined) {
+            //                 args[3] = ""
+            //             }
+            //             let joke = JSON.parse(FileLib.getUrlContent("http://api.icndb.com/jokes/random?firstName=" + args[2] + "&lastName=" + args[3] + "&escape=javascript"))
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.value.joke))
+            //             return;
+            //         }
+
+            //         if (Math.random() < 0.05) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Here is the funniest joke i know..."))
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + player))
+            //             return
+            //         }
+            //         let joke = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/joke.json"))
+            //         commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.data.setup))
+            //         commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + joke.data.punchline))
+            //     }
+
+            //     commandFunctionsNonGuild.soopyaddons = function (player, chatCommand, command, args) {
+            //         commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", CT is Pepega"))
+            //     }
+
+            //     commandFunctionsNonGuild.scammercheck = function (player, chatCommand, command, args) {
+            //         if (args[1] === undefined) {
+            //             args[1] = player
+            //         }
+
+            //         let playerUUID;
+            //         try {
+            //             playerUUID = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + args[1])).id
+            //         } catch (e) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Invalid player"))
+            //             return;
+            //         }
+            //         let isScammer = scammerData[playerUUID] !== undefined
+
+            //         if (!isScammer) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " not a scammer"))
+            //         } else {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " a scammer"))
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Reason: " + scammerData[playerUUID].reason))
+            //         }
+            //     }
+            //     commandFunctionsNonGuild.missingpets = function (player, chatCommand, command, args) {
+            //         if (args[1] === undefined) {
+            //             args[1] = player
+            //         }
+
+            //         let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
+
+            //         let profile = ""
+            //         Object.keys(data.profiles).forEach((profileId) => {
+            //             if (data.profiles[profileId].current) {
+            //                 profile = profileId
+            //             }
+            //         })
+
+            //         let missingPets = data.profiles[profile].data.missingPets
+
+            //         commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingPets.length + " pets!"))
+            //         if (missingPets.length > 0) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", (" + missingPets.slice(0, 5).map(pet => pet.display_name).join(" | ") + (missingPets.length > 5 ? " | and " + (missingPets.length - 5) + " more" : "") + ")"))
+            //         }
+            //     }
+            //     commandFunctionsNonGuild.fetchur = function (player, chatCommand, command, args) {
+
+            //         let fletcherMessages2 = [
+            //             "50 red wool",
+            //             "20 yellow stained glass",
+            //             "1 compass",
+            //             "20 mythril",
+            //             "1 firework rocket",
+            //             "1 cheap coffee or decent coffee",
+            //             "1 wooden door",
+            //             "3 rabbits feet",
+            //             "1 superboom tnt",
+            //             "1 pumpkin",
+            //             "1 flint and steel",
+            //             "50 nether quartz ore",
+            //             "16 ender pearl"
+            //         ]
+            //         let currFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
+            //         let willChangeIn = (1000 * 60 * 60 * 24) - ((Date.now() - 1613624400000) % (1000 * 60 * 60 * 24))
+            //         let changeH = Math.floor(willChangeIn / (1000 * 60 * 60))
+            //         let changeM = Math.floor(willChangeIn % (1000 * 60 * 60) / 1000 / 60)
+            //         let willChangeInText = changeH + " hour" + (changeH === 1 ? "" : "s") + " " + changeM + " min" + (changeM === 1 ? "" : "s")
+            //         let nextFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60 + (1000 * 60 * 60 * 24)).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
+            //         commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
+            //     }
+            //     commandFunctionsNonGuild.google = function (player, chatCommand, command, args) {
+            //         if (args[1] == undefined) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", enter question!"))
+            //             return;
+            //         }
+
+            //         let question = ""
+            //         let first = true
+
+            //         args.forEach((a) => {
+            //             if (!first) {
+            //                 question += (question === "" ? "" : " ") + a
+            //             }
+            //             first = false
+            //         })
+
+            //         let reset
+            //         try {
+            //             res = FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/googleResult.json?i=" + encodeURIComponent(question)).replace("Wolfram|Alpha did not understand your input", "there was an error with your question!")
+            //         } catch (e) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error with your question!"))
+            //             return;
+            //         }
+
+            //         let responce = [""]
+
+            //         res.split(" ").forEach((a) => {
+            //             if ((responce[responce.length - 1] + a).length > 150) {
+            //                 responce.push(a)
+            //             } else {
+            //                 responce[responce.length - 1] += " " + a
+            //             }
+            //         })
+
+            //         responce.forEach((a) => {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + a))
+            //         })
+            //     }
+
+            //     // commandFunctionsNonGuild.networth = function (player, chatCommand, command, args) {
+            //     //     if (args[1] === undefined) {
+            //     //         args[1] = player
+            //     //     }
+
+            //     //     let data = JSON.parse(FileLib.getUrlContent("https://sky.shiiyu.moe/api/v2/profile/" + args[1]))
+            //     //     try {
+            //     //         let netWorth = 0
+            //     //         let netWorthLast = 0
+
+
+            //     //         function worthChangeVerift() {
+            //     //             if (netWorth.toString() === "NaN" || netWorth.toString() === "undefined") {
+            //     //                 netWorth = netWorthLast
+            //     //             }
+            //     //             netWorthLast = netWorth
+            //     //         }
+
+            //     //         let items = []
+            //     //         let pets = []
+
+            //     //         Object.keys(data.profiles).forEach((profId) => {
+            //     //             let itemStorage = ["wardrobe_inventory", "inventory", "enderchest", "talisman_bag", "fishing_bag", "quiver", "potion_bag", "storage"]
+            //     //             let itemStorageReplace = {
+            //     //                 "wardrobe": "wardrobe_inventory",
+            //     //                 "ward": "wardrobe_inventory",
+            //     //                 "invent": "inventory",
+            //     //                 "inv": "inventory",
+            //     //                 "ec": "enderchest",
+            //     //                 "talis": "talisman_bag",
+            //     //                 "fish": "fishing_bag",
+            //     //                 "potion": "potion_bag"
+            //     //             }
+            //     //             itemStorage.forEach((itemLocation) => {
+            //     //                 data.profiles[profId].items[itemLocation].forEach((item) => {
+            //     //                     if (args[2] === undefined || args[2].toLowerCase() === itemLocation || itemStorageReplace[args[2].toLowerCase()] === itemLocation) {
+            //     //                         items.push({ ...item, "location": itemLocation })
+            //     //                     }
+            //     //                 })
+            //     //             })
+            //     //             if (args[2] === undefined || args[2].toLowerCase() === "pets") {
+            //     //                 data.profiles[profId].data.pets.forEach((pet) => {
+            //     //                     pets.push(pet)
+            //     //                 })
+            //     //             }
+
+            //     //             if (args[2] === undefined) {
+            //     //                 netWorth += data.profiles[profId].raw.coin_purse
+            //     //                 worthChangeVerift()
+            //     //                 netWorth += data.profiles[profId].data.bank
+            //     //                 worthChangeVerift()
+            //     //                 netWorth += data.profiles[profId].data.slayer_coins_spent.total
+            //     //                 worthChangeVerift()
+            //     //             }
+            //     //         })
+            //     //         items.forEach((item) => {
+            //     //             if (item.Count !== undefined) {
+            //     //                 netWorth += getItemWorth(item)
+            //     //                 worthChangeVerift()
+            //     //             }
+            //     //         })
+            //     //         pets.forEach((pet) => {
+            //     //             netWorth += getPetWorth(pet)
+            //     //             worthChangeVerift()
+            //     //         })
+
+
+            //     //         netWorth = addNotation("oneLetters", netWorth)
+            //     //         commandQueue.dm.push(spamBypass("/" + chatCommand + " " + player + ", " + (args[1] === player ? "You have" : args[1] + " has") + " a networth of $" + netWorth + "!"))
+
+
+            //     //     } catch (e) {
+            //     //         console.log(JSON.stringify(e))
+            //     //         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", there was an error!"))
+            //     //     }
+            //     // }
+
+            //     commandFunctionsNonGuild.lowestbin = function (player, chatCommand, command, args) {
+            //         let vals = {}
+
+            //         args.shift()
+
+            //         args.forEach((arg) => {
+            //             Object.keys(lowestBins).forEach((lowestBin) => {
+            //                 if (lowestBin.toLowerCase().includes(arg.toLowerCase())) {
+            //                     if (vals[lowestBin] == undefined) { vals[lowestBin] = 0 }
+            //                     vals[lowestBin]++
+            //                     if (lowestBin.includes("STARRED")) {
+            //                         vals[lowestBin] -= 0.1
+            //                     }
+            //                 }
+            //             })
+            //         })
+
+            //         let topItem = undefined
+            //         let topScore = 0;
+
+            //         Object.keys(vals).forEach((val) => {
+            //             if (vals[val] > topScore) {
+            //                 topItem = val
+            //                 topScore = vals[val]
+            //             }
+            //         })
+
+            //         if (topItem === undefined) {
+            //             commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", no auctions found!"))
+            //             return;
+            //         }
+
+            //         let itemName = topItem.replace(/_/g, " ").toLowerCase()
+            //         itemName = itemName.substr(0, 1).toUpperCase() + itemName.substr(1)
+
+            //         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", Cheapest bin for " + itemName + " is " + numberWithCommas(lowestBins[topItem]) + "!"))
+
+            //     }
+            //     commandFunctionsNonGuild.talismans = function (player, chatCommand, command, args) {
+            //         let playerScan = player
+            //         if (args[1] !== undefined) {
+            //             playerScan = args[1]
+            //         }
+
+            //         let stats1 = JSON.parse(FileLib.getUrlContent("https://api.slothpixel.me/api/players/" + playerScan))
+            //         if (stats1.error === "Player does not exist") {
+            //             commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid player!"))
+            //             return;
+            //         }
+            //         let stats = JSON.parse(FileLib.getUrlContent("https://api.slothpixel.me/api/skyblock/profile/" + playerScan))
+
+            //         let talisData = {}
+
+            //         let messageGChat = ""
+
+            //         try {
+            //             let uuid = stats1.uuid
+            //             let playerName = stats1.username
+
+            //             let talisData = stats.members[uuid].talisman_bag
+
+            //             let totalTalis = 0
+            //             let totalRecombedTalis = 0
+
+            //             talisData.forEach((talis) => {
+            //                 if (talis.attributes === undefined) {
+            //                     return;
+            //                 }
+            //                 totalTalis++
+            //                 totalRecombedTalis += talis.attributes.rarity_upgrades == 1 ? 1 : 0
+            //             })
+
+            //             messageGChat = playerName + " has a total of " + totalTalis + " talismans (" + totalRecombedTalis + " recombed)"
+            //         } catch (err) {
+            //             console.log(JSON.stringify(err))
+            //             messageGChat = "There was a error :("
+            //         }
+
+            //         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + messageGChat))
+
+            //     }
+            //     commandFunctionsNonGuild.skill = function (player, chatCommand, command, args) {
+            //         if (args[1] === undefined || args[2] === undefined) {
+            //             commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", requires 2 arguments!"))
+            //             return;
+            //         }
+            //         let skillReplace = {
+            //             "dungeon": "dungeoneering",
+            //             "catacombs": "dungeoneering"
+            //         }
+            //         if (skillReplace[args[1]] !== undefined) {
+            //             args[1] = skillReplace[args[1]]
+            //         }
+
+            //         if (skillData.collections[args[1].toUpperCase()] === undefined) {
+            //             commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill type!"))
+            //             return;
+            //         }
+
+            //         args[2] = parseInt(args[2]) - 1
+
+
+            //         if (args[3] !== undefined) {
+            //             args[3] = parseInt(args[3]) - 1
+
+            //             if (skillData.collections[args[1].toUpperCase()].levels[args[3]] === undefined) {
+            //                 commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill level!"))
+            //                 return;
+            //             }
+
+            //             let needExp = 0
+            //             if (args[2] === -1) {
+            //                 needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired)
+            //             } else {
+
+            //                 if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
+            //                     commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill level!"))
+            //                     return;
+            //                 }
+            //                 needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired - skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired)
+            //             }
+
+
+            //             let expinfo = "it takes " + needExp + " exp to go from " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " -> " + (args[3] + 1)
+            //             commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + expinfo))
+            //             return;
+            //         }
+            //         if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
+            //             commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", invalid skill level!"))
+            //             return;
+            //         }
+
+            //         Thread.sleep(500)
+
+            //         commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " (" + addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired) + " exp)"))
+            //         skillData.collections[args[1].toUpperCase()].levels[args[2]].unlocks.forEach((unlock) => {
+            //             commandQueue.other.push(spamBypass("/" + chatCommand + " @" + player + ", " + unlock))
+            //         })
+            //     }
+            //     commandFunctionsNonGuild.help = function (player, chatCommand, command, args) {
+
+            //         if (args[1] === undefined) {
+            //             commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", Possible commands are:"))
+            //             Object.keys(commandFunctionsNonGuild).forEach((commandF) => {
+            //                 commandQueue.dm.push(spamBypass("/" + chatCommand + " @" + player + ", " + commandF))
+            //             })
+            //         } else {
+            //             switch (args[1]) {
+            //                 // case "aliases":
+
+            //                 //     commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot Command aliases "))
+            //                 //     Object.keys(commandAlias).forEach((alias) => {
+            //                 //         commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot " + alias + " runs " + commandAlias[alias]))
+            //                 //     })
+            //                 //     break;
+
+            //                 default:
+
+            //                     commandQueue.dm.push(spamBypass("/msg " + player + " @soopybot Help for command " + args[1]))
+            //                     break;
+            //             }
+            //         }
+            //     }
+            // }
 
             commandFunctions.scammercheck = function (player, command, args, reply) {
                 if (args[1] === undefined) {
@@ -1061,13 +1066,13 @@ register("worldLoad", () => {
                 let isScammer = scammerData[playerUUID] !== undefined
 
                 if (!isScammer) {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " not a scammer"))
                     } else {
                         commandQueue.dm.push(spamBypass("/gc @" + player + ", " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " not a scammer"))
                     }
                 } else {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.toLowerCase() === args[1].toLowerCase() ? "You are" : args[1] + " is") + " a scammer"))
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Reason: " + scammerData[playerUUID].reason))
                     } else {
@@ -1346,7 +1351,7 @@ register("worldLoad", () => {
                 args.shift()
 
                 if (player !== "Soopyboo32" && player !== "vNoxus" && player !== "alon1396" && player !== "Leyrox" && player !== "Flarely") {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot you do not have permission to perform this command!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", you do not have permission to perform this command!"))
@@ -1372,7 +1377,7 @@ register("worldLoad", () => {
                     pollAnswers = {}
                     return;
                 } else {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot min of 2 options!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", min of 2 options!"))
@@ -1382,7 +1387,7 @@ register("worldLoad", () => {
             }
             commandFunctions.cancelpoll = function (player, command, args, reply) {
                 if (player !== "Soopyboo32" && player !== "vNoxus" && player !== "alon1396" && player !== "Leyrox" && player !== "Flarely") {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot you do not have permission to perform this command!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", you do not have permission to perform this command!"))
@@ -1408,7 +1413,7 @@ register("worldLoad", () => {
             }
             commandFunctions.answer = function (player, command, args, reply) {
                 if (!pollTime) {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot There is no running poll!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", There is no running poll!"))
@@ -1423,14 +1428,14 @@ register("worldLoad", () => {
                         if (pollArgs.length >= answer) {
                             pollAnswers[player] = answer
 
-                            if (commandsSpeed > commandsSpeedLimit) {
+                            if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Registered vote!"))
                             } else {
                                 commandQueue.other.push(spamBypass("/gc @" + player + ", Registered vote!"))
                             }
                             return;
                         } else {
-                            if (commandsSpeed > commandsSpeedLimit) {
+                            if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid answer!"))
                             } else {
                                 commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid answer!"))
@@ -1438,7 +1443,7 @@ register("worldLoad", () => {
                             return;
                         }
                     } else {
-                        if (commandsSpeed > commandsSpeedLimit) {
+                        if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot You have already voted in this poll!"))
                         } else {
                             commandQueue.other.push(spamBypass("/gc @" + player + ", You have already voted in this poll!"))
@@ -1446,7 +1451,7 @@ register("worldLoad", () => {
                         return;
                     }
                 } else {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid answer!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid answer!"))
@@ -1473,40 +1478,40 @@ register("worldLoad", () => {
                     pollAnswers = {}
                 }
             })
-            commandFunctions.fetchur = function (player, command, args, reply) {
-                let fletcherMessages2 = [
-                    "50 red wool",
-                    "20 yellow stained glass",
-                    "1 compass",
-                    "20 mythril",
-                    "1 firework rocket",
-                    "1 cheap coffee or decent coffee",
-                    "1 wooden door",
-                    "3 rabbits feet",
-                    "1 superboom tnt",
-                    "1 pumpkin",
-                    "1 flint and steel",
-                    "50 nether quartz ore",
-                    "16 ender pearl"
-                ]
-                let currFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
-                let willChangeIn = (1000 * 60 * 60 * 24) - ((Date.now() - 1613624400000) % (1000 * 60 * 60 * 24))
-                let changeH = Math.floor(willChangeIn / (1000 * 60 * 60))
-                let changeM = Math.floor(willChangeIn % (1000 * 60 * 60) / 1000 / 60)
-                let willChangeInText = changeH + " hour" + (changeH === 1 ? "" : "s") + " " + changeM + " min" + (changeM === 1 ? "" : "s")
-                let nextFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60 + (1000 * 60 * 60 * 24)).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
-                if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
-                } else {
-                    commandQueue.dm.push(spamBypass("/gc @" + player + ", Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
-                }
-            }
+            // commandFunctions.fetchur = function (player, command, args, reply) {
+            //     let fletcherMessages2 = [
+            //         "50 red wool",
+            //         "20 yellow stained glass",
+            //         "1 compass",
+            //         "20 mythril",
+            //         "1 firework rocket",
+            //         "1 cheap coffee or decent coffee",
+            //         "1 wooden door",
+            //         "3 rabbits feet",
+            //         "1 superboom tnt",
+            //         "1 pumpkin",
+            //         "1 flint and steel",
+            //         "50 nether quartz ore",
+            //         "16 ender pearl"
+            //     ]
+            //     let currFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
+            //     let willChangeIn = (1000 * 60 * 60 * 24) - ((Date.now() - 1613624400000) % (1000 * 60 * 60 * 24))
+            //     let changeH = Math.floor(willChangeIn / (1000 * 60 * 60))
+            //     let changeM = Math.floor(willChangeIn % (1000 * 60 * 60) / 1000 / 60)
+            //     let willChangeInText = changeH + " hour" + (changeH === 1 ? "" : "s") + " " + changeM + " min" + (changeM === 1 ? "" : "s")
+            //     let nextFetchur = (fletcherMessages2[(new Date(Date.now() - 5 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 1000 * 60 + (1000 * 60 * 60 * 24)).getDate()) % fletcherMessages2.length - 1]) || fletcherMessages2[0]
+            //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
+            //     } else {
+            //         commandQueue.dm.push(spamBypass("/gc @" + player + ", Fetchur is currently " + currFetchur + " and will change to " + nextFetchur + " in " + willChangeInText))
+            //     }
+            // }
 
             commandFunctions.stats = function (player, command, args, reply) {
                 if (args[1] === undefined) {
                     args[1] = player
                 }
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
 
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", DMing you the results :)"))
@@ -1517,7 +1522,7 @@ register("worldLoad", () => {
                     let playerUUID = ""
 
                     if (!playerData.success) {
-                        if (commandsSpeed > commandsSpeedLimit) {
+                        if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + playerData.reason))
                         } else {
                             commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data: " + playerData.reason))
@@ -1525,7 +1530,7 @@ register("worldLoad", () => {
                         return;
                     }
                     if (!playerData.data.success) {
-                        if (commandsSpeed > commandsSpeedLimit) {
+                        if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data"))
                         } else {
                             commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data!"))
@@ -1534,7 +1539,7 @@ register("worldLoad", () => {
                     }
 
                     if (playerData.data.player == null) {
-                        if (commandsSpeed > commandsSpeedLimit) {
+                        if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data (Invalid player?)"))
                         } else {
                             commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data (Invalid player?)"))
@@ -1548,7 +1553,7 @@ register("worldLoad", () => {
                         let skyblockData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=skyblock_profiles?uuid=" + playerUUID))
 
                         if (!skyblockData.success) {
-                            if (commandsSpeed > commandsSpeedLimit) {
+                            if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + skyblockData.reason))
                             } else {
                                 commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data: " + skyblockData.reason))
@@ -1556,7 +1561,7 @@ register("worldLoad", () => {
                             return;
                         }
                         if (!skyblockData.data.success) {
-                            if (commandsSpeed > commandsSpeedLimit) {
+                            if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data!"))
                             } else {
                                 commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data!"))
@@ -1564,7 +1569,7 @@ register("worldLoad", () => {
                             return;
                         }
                         if (skyblockData.data.profiles == null) {
-                            if (commandsSpeed > commandsSpeedLimit) {
+                            if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Player has no skyblock profiles!"))
                             } else {
                                 commandQueue.other.push(spamBypass("/gc @" + player + ", Player has no skyblock profiles!"))
@@ -1789,14 +1794,14 @@ register("worldLoad", () => {
 
                         //book.display()
                     } catch (err) {
-                        if (commandsSpeed > commandsSpeedLimit) {
+                        if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error: " + err))
                         } else {
                             commandQueue.other.push(spamBypass("/gc @" + player + ", Error: " + err))
                         }
                     }
                 } catch (err) {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error: " + err))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", Error: " + err))
@@ -1811,7 +1816,7 @@ register("worldLoad", () => {
                 })[0]?.uuid
 
                 if (!uuid) {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot could not find you on the guild leaderboard! give it up to a day to update."))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", could not find you on the guild leaderboard! give it up to a day to update."))
@@ -1824,7 +1829,7 @@ register("worldLoad", () => {
                 })[0]?.guildInfo?.rank || "notinguildpepega";
 
                 if (rank !== "Staff" && rank !== "Guild Master") {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot you do not have permission to perform this command!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", you do not have permission to perform this command!"))
@@ -1868,232 +1873,232 @@ register("worldLoad", () => {
                 commandQueue.other.push(spamBypass("/gc @everyone, finished updating ranks!"))
             }
 
-            commandFunctions.lowestbin = function (player, command, args, reply) {
-                let vals = {}
+            // commandFunctions.lowestbin = function (player, command, args, reply) {
+            //     let vals = {}
 
-                args.shift()
+            //     args.shift()
 
-                args.forEach((arg) => {
-                    Object.keys(lowestBins).forEach((lowestBin) => {
-                        if (lowestBin.toLowerCase().includes(arg.toLowerCase())) {
-                            if (vals[lowestBin] == undefined) { vals[lowestBin] = 0 }
-                            vals[lowestBin]++
-                            vals[lowestBin] -= 0.01 * lowestBin.length
-                        }
-                    })
-                })
+            //     args.forEach((arg) => {
+            //         Object.keys(lowestBins).forEach((lowestBin) => {
+            //             if (lowestBin.toLowerCase().includes(arg.toLowerCase())) {
+            //                 if (vals[lowestBin] == undefined) { vals[lowestBin] = 0 }
+            //                 vals[lowestBin]++
+            //                 vals[lowestBin] -= 0.01 * lowestBin.length
+            //             }
+            //         })
+            //     })
 
-                let topItem = undefined
-                let topScore = 0;
+            //     let topItem = undefined
+            //     let topScore = 0;
 
-                Object.keys(vals).forEach((val) => {
-                    if (vals[val] > topScore) {
-                        topItem = val
-                        topScore = vals[val]
-                    }
-                })
+            //     Object.keys(vals).forEach((val) => {
+            //         if (vals[val] > topScore) {
+            //             topItem = val
+            //             topScore = vals[val]
+            //         }
+            //     })
 
-                if (topItem === undefined) {
-                    reply("No auctions found!")
-                    return;
-                }
+            //     if (topItem === undefined) {
+            //         reply("No auctions found!")
+            //         return;
+            //     }
 
-                let itemName = topItem.replace(/_/g, " ").toLowerCase()
-                itemName = itemName.substr(0, 1).toUpperCase() + itemName.substr(1)
+            //     let itemName = topItem.replace(/_/g, " ").toLowerCase()
+            //     itemName = itemName.substr(0, 1).toUpperCase() + itemName.substr(1)
 
-                reply("Cheapest bin for " + itemName + " is " + numberWithCommas(lowestBins[topItem]) + "!")
+            //     reply("Cheapest bin for " + itemName + " is " + numberWithCommas(lowestBins[topItem]) + "!")
 
-            }
-            commandFunctions.skillaverage = function (player, command, args, reply) {
+            // }
+            // commandFunctions.skillaverage = function (player, command, args, reply) {
 
-                let uuidData
-                try {
-                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
-                } catch (e) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
-                    }
-                    return;
-                }
+            //     let uuidData
+            //     try {
+            //         uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
+            //     } catch (e) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
+            //         }
+            //         return;
+            //     }
 
-                let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getPlayerSkill.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + uuidData.id))
+            //     let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getPlayerSkill.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + uuidData.id))
 
-                if (data.success) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s skill average: " + data["skill-avg"]))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + "'s skill average: " + data["skill-avg"]))
-                    }
-                } else {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error! (" + data.reason + ")"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Error! (" + data.reason + ")"))
-                    }
-                }
+            //     if (data.success) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s skill average: " + data["skill-avg"]))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + "'s skill average: " + data["skill-avg"]))
+            //         }
+            //     } else {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error! (" + data.reason + ")"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Error! (" + data.reason + ")"))
+            //         }
+            //     }
 
-            }
-            commandFunctions.slayer = function (player, command, args, reply) {
+            // }
+            // commandFunctions.slayer = function (player, command, args, reply) {
 
-                let uuidData
-                try {
-                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
-                } catch (e) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
-                    }
-                    return;
-                }
+            //     let uuidData
+            //     try {
+            //         uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
+            //     } catch (e) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
+            //         }
+            //         return;
+            //     }
 
-                let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getPlayerSkill.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + uuidData.id))
+            //     let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getPlayerSkill.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + uuidData.id))
 
-                if (data.success) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s total slayer exp: " + numberWithCommas(data["slayer-total"])))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + "'s total slayer exp: " + numberWithCommas(data["slayer-total"])))
-                    }
-                } else {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error! (" + data.reason + ")"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Error! (" + data.reason + ")"))
-                    }
-                }
+            //     if (data.success) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s total slayer exp: " + numberWithCommas(data["slayer-total"])))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + "'s total slayer exp: " + numberWithCommas(data["slayer-total"])))
+            //         }
+            //     } else {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error! (" + data.reason + ")"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Error! (" + data.reason + ")"))
+            //         }
+            //     }
 
-            }
+            // }
 
-            commandFunctions.dungeon = function (player, command, args, reply) {
+            // commandFunctions.dungeon = function (player, command, args, reply) {
 
-                let uuidData
-                try {
-                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
-                } catch (e) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
-                    }
-                    return;
-                }
+            //     let uuidData
+            //     try {
+            //         uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
+            //     } catch (e) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
+            //         }
+            //         return;
+            //     }
 
-                let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getPlayerSkill.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + uuidData.id))
+            //     let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getPlayerSkill.json?key=lkRFxoMYwrkgovPRn2zt&uuid=" + uuidData.id))
 
-                if (data.success) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s catacombs level: " + data["dungeon"]))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + "'s catacombs level: " + data["dungeon"]))
-                    }
-                } else {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error! (" + data.reason + ")"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Error! (" + data.reason + ")"))
-                    }
-                }
+            //     if (data.success) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s catacombs level: " + data["dungeon"]))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + "'s catacombs level: " + data["dungeon"]))
+            //         }
+            //     } else {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error! (" + data.reason + ")"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Error! (" + data.reason + ")"))
+            //         }
+            //     }
 
-            }
-            commandFunctions.secrets = function (player, command, args, reply) {
+            // }
+            // commandFunctions.secrets = function (player, command, args, reply) {
 
-                let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player/" + (args[1] || player)))
+            //     let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player/" + (args[1] || player)))
 
-                if (!data.data.exists) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + " does not exist!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + " does not exist!"))
-                    }
-                    return
-                }
+            //     if (!data.data.exists) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + " does not exist!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + " does not exist!"))
+            //         }
+            //         return
+            //     }
 
-                if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + "'s dungeon secrets: " + numberWithCommas(data.data.stats.achievements.skyblock.dungeon_secrets || 0)))
-                } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + "'s dungeon secrets: " + numberWithCommas(data.data.stats.achievements.skyblock.dungeon_secrets || 0)))
-                }
+            //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + "'s dungeon secrets: " + numberWithCommas(data.data.stats.achievements.skyblock.dungeon_secrets || 0)))
+            //     } else {
+            //         commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + "'s dungeon secrets: " + numberWithCommas(data.data.stats.achievements.skyblock.dungeon_secrets || 0)))
+            //     }
 
-            }
-            commandFunctions.weight = function (player, command, args, reply) {
+            // }
+            // commandFunctions.weight = function (player, command, args, reply) {
 
-                let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player/" + (args[1] || player)))
+            //     let data = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player/" + (args[1] || player)))
 
-                if (!data.data.exists) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + " does not exist!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + " does not exist!"))
-                    }
-                    return
-                }
-                let data2 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player_skyblock/" + (data.data.uuid) + "?key=dee67f9c765cf8df"))
+            //     if (!data.data.exists) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + " does not exist!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + " does not exist!"))
+            //         }
+            //         return
+            //     }
+            //     let data2 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player_skyblock/" + (data.data.uuid) + "?key=dee67f9c765cf8df"))
 
-                let weightData = data2.data.profiles[data2.data.stats.bestProfileId].members[data.data.uuid].weight
-                if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + "'s weight: " + numberWithCommas(Math.round(weightData.total)) + " (Skill: " + numberWithCommas(Math.round(weightData.skill.total)) + ", Slayer: " + numberWithCommas(Math.round(weightData.slayer.total)) + ", Dungeons: " + numberWithCommas(Math.round(weightData.dungeons.total)) + ")"))
-                } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + "'s weight: " + numberWithCommas(Math.round(weightData.total)) + " (Skill: " + numberWithCommas(Math.round(weightData.skill.total)) + ", Slayer: " + numberWithCommas(Math.round(weightData.slayer.total)) + ", Dungeons: " + numberWithCommas(Math.round(weightData.dungeons.total)) + ")"))
-                }
+            //     let weightData = data2.data.profiles[data2.data.stats.bestProfileId].members[data.data.uuid].weight
+            //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + data.data.username + "'s weight: " + numberWithCommas(Math.round(weightData.total)) + " (Skill: " + numberWithCommas(Math.round(weightData.skill.total)) + ", Slayer: " + numberWithCommas(Math.round(weightData.slayer.total)) + ", Dungeons: " + numberWithCommas(Math.round(weightData.dungeons.total)) + ")"))
+            //     } else {
+            //         commandQueue.other.push(spamBypass("/gc @" + player + ", " + data.data.username + "'s weight: " + numberWithCommas(Math.round(weightData.total)) + " (Skill: " + numberWithCommas(Math.round(weightData.skill.total)) + ", Slayer: " + numberWithCommas(Math.round(weightData.slayer.total)) + ", Dungeons: " + numberWithCommas(Math.round(weightData.dungeons.total)) + ")"))
+            //     }
 
-            }
+            // }
 
-            commandFunctions.bazzar = function (player, command, args, reply) {
-                let vals = {}
+            // commandFunctions.bazzar = function (player, command, args, reply) {
+            //     let vals = {}
 
-                args.forEach((arg) => {
-                    if (arg == "bazzar") {
-                        return;
-                    }
-                    Object.keys(bazaar).forEach((bazItem) => {
-                        if (bazaar[bazItem].name.toLowerCase().includes(arg.toLowerCase())) {
-                            if (vals[bazItem] == undefined) { vals[bazItem] = 0 }
-                            vals[bazItem]++
-                            vals[bazItem] -= 0.01 * bazaar[bazItem].name.length
-                        }
-                    })
-                })
+            //     args.forEach((arg) => {
+            //         if (arg == "bazzar") {
+            //             return;
+            //         }
+            //         Object.keys(bazaar).forEach((bazItem) => {
+            //             if (bazaar[bazItem].name.toLowerCase().includes(arg.toLowerCase())) {
+            //                 if (vals[bazItem] == undefined) { vals[bazItem] = 0 }
+            //                 vals[bazItem]++
+            //                 vals[bazItem] -= 0.01 * bazaar[bazItem].name.length
+            //             }
+            //         })
+            //     })
 
-                let topItem = undefined
-                let topScore = 0;
+            //     let topItem = undefined
+            //     let topScore = 0;
 
-                Object.keys(vals).forEach((val) => {
-                    if (vals[val] > topScore) {
-                        topItem = val
-                        topScore = vals[val]
-                    }
-                })
+            //     Object.keys(vals).forEach((val) => {
+            //         if (vals[val] > topScore) {
+            //             topItem = val
+            //             topScore = vals[val]
+            //         }
+            //     })
 
-                if (topItem === undefined) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot no item found!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", no item found!"))
-                    }
-                    return;
-                }
+            //     if (topItem === undefined) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot no item found!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", no item found!"))
+            //         }
+            //         return;
+            //     }
 
-                let itemName = bazaar[topItem].name
+            //     let itemName = bazaar[topItem].name
 
-                if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Insta buy for " + itemName + " is " + numberWithCommas(Math.round(bazaar[topItem].buyPrice)) + " Insta sell is " + numberWithCommas(Math.round(bazaar[topItem].sellPrice)) + "!"))
-                } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", Insta buy for " + itemName + " is " + numberWithCommas(Math.round(bazaar[topItem].buyPrice)) + " Insta sell is " + numberWithCommas(Math.round(bazaar[topItem].sellPrice)) + "!"))
-                }
+            //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Insta buy for " + itemName + " is " + numberWithCommas(Math.round(bazaar[topItem].buyPrice)) + " Insta sell is " + numberWithCommas(Math.round(bazaar[topItem].sellPrice)) + "!"))
+            //     } else {
+            //         commandQueue.other.push(spamBypass("/gc @" + player + ", Insta buy for " + itemName + " is " + numberWithCommas(Math.round(bazaar[topItem].buyPrice)) + " Insta sell is " + numberWithCommas(Math.round(bazaar[topItem].sellPrice)) + "!"))
+            //     }
 
-            }
+            // }
             commandFunctions.help = function (player, command, args, reply) {
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
 
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + " DMing you the results, make sure to have your dms open :)"))
                 }
 
                 if (args[1] === undefined) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Possible commands are:"))
+                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Possible commands are: all commands from https://soopymc.my.to/commands and "))
                     let helpLines = [""]
                     Object.keys(commandFunctions).forEach((commandF) => {
                         if (helpLines[helpLines.length - 1].length > 100) {
@@ -2130,7 +2135,7 @@ register("worldLoad", () => {
                     }
                     let joke = JSON.parse(FileLib.getUrlContent("http://api.icndb.com/jokes/random?firstName=" + args[2] + "&lastName=" + args[3] + "&escape=javascript"))
 
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + joke.value.joke))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", " + joke.value.joke))
@@ -2138,13 +2143,13 @@ register("worldLoad", () => {
                     return;
                 }
 
-                if (Math.random() < 0.05 && !(commandsSpeed > commandsSpeedLimit)) {
+                if (Math.random() < 0.05 && !(commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit)) {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", Here is the funniest joke i know..."))
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + player))
                     return
                 }
                 let joke = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/joke.json"))
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + joke.data.setup))
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + joke.data.punchline))
                 } else {
@@ -2152,153 +2157,153 @@ register("worldLoad", () => {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + joke.data.punchline))
                 }
             }
-            commandFunctions.math = function (player, command, args, reply) {
-                if (args === undefined) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid equasion!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", invalid equasion!"))
-                    }
-                }
+            // commandFunctions.math = function (player, command, args, reply) {
+            //     if (args === undefined) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid equasion!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", invalid equasion!"))
+            //         }
+            //     }
 
-                args.shift()
+            //     args.shift()
 
-                let res;
-                try {
-                    res = FileLib.getUrlContent("http://api.mathjs.org/v4/?expr=" + encodeURIComponent(args.join(" ")))
-                } catch (e) {
-                    res = mathBad[Math.floor(Math.random() * mathBad.length)]
-                }
+            //     let res;
+            //     try {
+            //         res = FileLib.getUrlContent("http://api.mathjs.org/v4/?expr=" + encodeURIComponent(args.join(" ")))
+            //     } catch (e) {
+            //         res = mathBad[Math.floor(Math.random() * mathBad.length)]
+            //     }
 
-                if (/[0-9]\.?[0-9]*e\+[0-9]+/.test(res)) {
-                    res = numberWithCommas(parseFloat(res))
-                }
+            //     if (/[0-9]\.?[0-9]*e\+[0-9]+/.test(res)) {
+            //         res = numberWithCommas(parseFloat(res))
+            //     }
 
-                if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + res))
-                } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + res))
-                }
-            }
-            commandFunctions.whatdoing = function (player, command, args, reply) {
-                let playerCheck = args[1] || player
+            //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + res))
+            //     } else {
+            //         commandQueue.other.push(spamBypass("/gc @" + player + ", " + res))
+            //     }
+            // }
+            // commandFunctions.whatdoing = function (player, command, args, reply) {
+            //     let playerCheck = args[1] || player
 
-                let res = ""
+            //     let res = ""
 
-                let playerData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=player?name=" + playerCheck.replace("_", "^")))
-                let playerUUID = ""
+            //     let playerData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=player?name=" + playerCheck.replace("_", "^")))
+            //     let playerUUID = ""
 
-                if (!playerData.success) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + playerData.reason))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data: " + playerData.reason))
-                    }
-                    return;
-                }
-                if (!playerData.data.success) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data! (PlayerData)"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data! (PlayerData)"))
-                    }
-                    return;
-                }
+            //     if (!playerData.success) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + playerData.reason))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data: " + playerData.reason))
+            //         }
+            //         return;
+            //     }
+            //     if (!playerData.data.success) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data! (PlayerData)"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data! (PlayerData)"))
+            //         }
+            //         return;
+            //     }
 
-                if (playerData.data.player == null) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data (Invalid player?)"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data (Invalid player?)"))
-                    }
-                    return;
-                }
+            //     if (playerData.data.player == null) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data (Invalid player?)"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data (Invalid player?)"))
+            //         }
+            //         return;
+            //     }
 
-                playerUUID = playerData.data.player.uuid
+            //     playerUUID = playerData.data.player.uuid
 
-                let skyblockData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=skyblock_profiles?uuid=" + playerUUID))
+            //     let skyblockData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=skyblock_profiles?uuid=" + playerUUID))
 
-                if (!skyblockData.success) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + skyblockData.reason))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data: " + skyblockData.reason))
-                    }
-                    return;
-                }
-                if (!skyblockData.data.success) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data! (SbData)"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data! (SbData)"))
-                    }
-                    return;
-                }
+            //     if (!skyblockData.success) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data: " + skyblockData.reason))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data: " + skyblockData.reason))
+            //         }
+            //         return;
+            //     }
+            //     if (!skyblockData.data.success) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Error fetching data! (SbData)"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", Error fetching data! (SbData)"))
+            //         }
+            //         return;
+            //     }
 
-                let last_save = 0
+            //     let last_save = 0
 
-                let playerProfile = skyblockData.data?.profiles[0] || {}
-                skyblockData.data.profiles.forEach((profile) => {
-                    if (profile.members[playerUUID].last_save > last_save) {
-                        last_save = profile.members[playerUUID].last_save
-                        playerProfile = profile
-                    }
-                })
-                let playerProf = playerProfile.members[playerUUID]
+            //     let playerProfile = skyblockData.data?.profiles[0] || {}
+            //     skyblockData.data.profiles.forEach((profile) => {
+            //         if (profile.members[playerUUID].last_save > last_save) {
+            //             last_save = profile.members[playerUUID].last_save
+            //             playerProfile = profile
+            //         }
+            //     })
+            //     let playerProf = playerProfile.members[playerUUID]
 
-                let statusData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=status?uuid=" + playerUUID))
+            //     let statusData = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/soopyAddons/getHypixelApi.json?key=lkRFxoMYwrkgovPRn2zt&dataWanted=status?uuid=" + playerUUID))
 
-                if (statusData.data.session.online) {
-                    if (statusData.data.session.gameType === "SKYBLOCK") {
-                        switch (statusData.data.session.mode) {
-                            case "combat_1":
-                                if (playerProf?.slayer_quest?.type === "spider") {
-                                    res = `doing t${playerProf.slayer_quest.tier + 1} tarantulas`
-                                    break;
-                                }
-                            case "hub":
-                                if (playerProf?.slayer_quest?.type === "wolf") {
-                                    res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the hub)`
-                                    break;
-                                }
-                                if (playerProf?.slayer_quest?.type === "zombie") {
-                                    res = `doing t${playerProf.slayer_quest.tier + 1} revs`
-                                    break;
-                                }
-                            case "combat_3":
-                                if (playerProf?.slayer_quest?.type === "enderman") {
-                                    res = `doing t${playerProf.slayer_quest.tier + 1} Voidgloom Seraphs`
-                                    break;
-                                }
-                            case "foraging_1":
-                                if (playerProf?.slayer_quest?.type === "wolf") {
-                                    res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the park)`
-                                    break;
-                                }
-                            default:
-                                res = "playing " + statusData.data.session.gameType + " (" + (areaData[statusData.data.session.mode] ? areaData[statusData.data.session.mode].Display || (statusData.data.session.mode) : statusData.data.session.mode) + ")"
-                                break;
-                        }
-                    } else {
-                        res = "playing " + statusData.data.session.gameType + " " + statusData.data.session.mode
-                    }
-                } else {
-                    res = "offline"
-                }
+            //     if (statusData.data.session.online) {
+            //         if (statusData.data.session.gameType === "SKYBLOCK") {
+            //             switch (statusData.data.session.mode) {
+            //                 case "combat_1":
+            //                     if (playerProf?.slayer_quest?.type === "spider") {
+            //                         res = `doing t${playerProf.slayer_quest.tier + 1} tarantulas`
+            //                         break;
+            //                     }
+            //                 case "hub":
+            //                     if (playerProf?.slayer_quest?.type === "wolf") {
+            //                         res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the hub)`
+            //                         break;
+            //                     }
+            //                     if (playerProf?.slayer_quest?.type === "zombie") {
+            //                         res = `doing t${playerProf.slayer_quest.tier + 1} revs`
+            //                         break;
+            //                     }
+            //                 case "combat_3":
+            //                     if (playerProf?.slayer_quest?.type === "enderman") {
+            //                         res = `doing t${playerProf.slayer_quest.tier + 1} Voidgloom Seraphs`
+            //                         break;
+            //                     }
+            //                 case "foraging_1":
+            //                     if (playerProf?.slayer_quest?.type === "wolf") {
+            //                         res = `doing t${playerProf.slayer_quest.tier + 1} svens (at the park)`
+            //                         break;
+            //                     }
+            //                 default:
+            //                     res = "playing " + statusData.data.session.gameType + " (" + (areaData[statusData.data.session.mode] ? areaData[statusData.data.session.mode].Display || (statusData.data.session.mode) : statusData.data.session.mode) + ")"
+            //                     break;
+            //             }
+            //         } else {
+            //             res = "playing " + statusData.data.session.gameType + " " + statusData.data.session.mode
+            //         }
+            //     } else {
+            //         res = "offline"
+            //     }
 
-                if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + playerCheck + " is currently " + res))
-                } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + playerCheck + " is currently " + res))
-                }
-            }
+            //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + playerCheck + " is currently " + res))
+            //     } else {
+            //         commandQueue.other.push(spamBypass("/gc @" + player + ", " + playerCheck + " is currently " + res))
+            //     }
+            // }
             // commandFunctions.networth = function (player, command, args) {
 
             //     let uuidData
             //     try {
             //         uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
             //     } catch (e) {
-            //         if (commandsSpeed > commandsSpeedLimit) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
             //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
             //         } else {
             //             commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
@@ -2313,7 +2318,7 @@ register("worldLoad", () => {
             //     let cause = nw.cause
 
             //     if (status !== 200) {
-            //         if (commandsSpeed > commandsSpeedLimit) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
             //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Status: " + status + ", cause: " + cause))
             //         } else {
             //             commandQueue.other.push(spamBypass("/gc @" + player + ", Status: " + status + ", cause: " + cause))
@@ -2324,7 +2329,7 @@ register("worldLoad", () => {
             //     let totalnw = nw.total
             //     // totalnw += data2.data.profiles[ args[2] === "current" ?data2.data.stats.currentProfileId:data2.data.stats.bestProfileId].stats.bank_balance || 0
 
-            //     if (commandsSpeed > commandsSpeedLimit) {
+            //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
             //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + "'s (maro) networth: " + (numberWithCommas(Math.floor(totalnw)))))
             //     } else {
             //         commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + "'s (maro) networth: " + (numberWithCommas(Math.floor(totalnw)))))
@@ -2336,7 +2341,7 @@ register("worldLoad", () => {
                 try {
                     uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
                 } catch (e) {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
@@ -2360,156 +2365,192 @@ register("worldLoad", () => {
                 let cD = currData[thing]
                 let change = Math.round((cD - oD) * 100) / 100
 
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + " has gained " + numberWithCommas(change) + " " + thing + " in the last week! (" + numberWithCommas(oD) + " -> " + numberWithCommas(cD) + ")"))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + " has gained " + numberWithCommas(change) + " " + thing + " in the last week! (" + numberWithCommas(oD) + " -> " + numberWithCommas(cD) + ")"))
                 }
             }
-            commandFunctions.nw = function (player, command, args, reply) {
-                if (args[1] === undefined) {
-                    args[1] = player
-                }
-
-                
+            commandFunctions.progressmonth = function (player, command, args) {
+                args.shift()
                 let uuidData
                 try {
-                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1])))
+                    uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1] || player)))
                 } catch (e) {
-                    reply("Invalid Username!")
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Invalid Username!"))
+                    } else {
+                        commandQueue.other.push(spamBypass("/gc @" + player + ", Invalid Username!"))
+                    }
                     return;
                 }
-                
-                let data2 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player_skyblock/" + (uuidData.id) + "?key=dee67f9c765cf8df&items"))
-                let data3 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/leaderboard/networth/user/" + (uuidData.id) + "?key=dee67f9c765cf8df&items"))
 
-                let nw = args[1] === "current" ? data2.data.profiles[data2.data.stats.currentProfileId].members[uuidData.id].soopyNetworth : data2.data.profiles[data2.data.stats.bestProfileId].members[uuidData.id].soopyNetworth
+                let data2 = JSON.parse(FileLib.getUrlContent("https://hypixel-app-api.senither.com/leaderboard/player/" + add_dashes_to_uuid(uuidData.id)))
 
-                let totalnw = nw.networth
-                let position = (data3?.data?.data?.position+1)
-                // totalnw += data2.data.profiles[data2.data.stats.bestProfileId].stats.bank_balance || 0
-
-                reply(uuidData.name + "'s networth: $" + (numberWithCommas(Math.floor(totalnw))) + (position ? " (#" + numberWithCommas(position) + ")" : ""))
-            }
-
-            function getItemWorth(item) {
-                let worth = 0;
-                let worthLast = 0;
-
-                function worthChangeVerift() {
-                    if (worth.toString() === "NaN" || worth.toString() === "undefined") {
-                        worth = worthLast
+                let currData = data2.data[0]
+                let lastWeekData = undefined
+                data2.data.forEach(d => {
+                    if (Date.now() - new Date(d.updated_at).getTime() <= 30 * 24 * 60 * 60 * 1000) {
+                        lastWeekData = d
                     }
-                    worthLast = worth
-                }
+                })
 
-                try {
-                    if (item.tag !== undefined) {
-                        if (item.tag.ExtraAttributes !== undefined) {
-                            let alb = undefined
-                            if (bazaar[item.tag.ExtraAttributes.id] === undefined) {
-                                worth += getAverageLowestBin(item.tag.ExtraAttributes.id)
-                                alb = getAverageLowestBin(item.tag.ExtraAttributes.id)
-                            } else {
-                                worth += bazaar[item.tag.ExtraAttributes.id].price
-                            }
-                            worthChangeVerift()
-                            if (alb && alb > 50000) {
-                                worth += bazaar.RECOMBOBULATOR_3000.price * item.tag.ExtraAttributes.rarity_upgrades
-                            }
-                            worthChangeVerift()
-                            worth += bazaar.HOT_POTATO_BOOK.price * Math.min(10, item.tag.ExtraAttributes.hot_potato_count)
-                            worthChangeVerift()
-                            worth += bazaar.FUMING_POTATO_BOOK.price * Math.max(0, item.tag.ExtraAttributes.hot_potato_count - 10)
-                            worthChangeVerift()
-                            if (item.tag.ExtraAttributes.ability_scroll !== undefined) {
-                                item.tag.ExtraAttributes.ability_scroll.forEach((scrollId) => {
-                                    worth += getAverageLowestBin(scrollId)
-                                    worthChangeVerift()
-                                })
-                            }
-                            if (item.tag.ExtraAttributes.gems !== undefined) {
-                                Object.keys(item.tag.ExtraAttributes.gems).forEach(gem => {
-                                    let gemId = item.tag.ExtraAttributes.gems[gem] + "_"
-                                    let a = gem.split("_")
-                                    a.pop()
-                                    gemId += a.join("_")
-                                    gemId += "_GEM"
+                let thing = args[0]
 
-                                    if (bazaar[gemId]) {
-                                        worth += (bazaar[gemId].price || 0)
-                                        worthChangeVerift()
-                                    }
-                                })
-                            }
-                            try {
-                                item.tag.ExtraAttributes.enchantments.forEach((enchant) => {
-                                    worth += getAverageLowestBin(enchant + ";" + item.tag.ExtraAttributes.enchantments[enchant])
-                                    worthChangeVerift()
-                                })
-                            } catch (e) { }
-                            if (reforgeToStone[item.tag.ExtraAttributes.modifier] !== undefined) {
-                                worth += getAverageLowestBin(reforgeToStone[item.tag.ExtraAttributes.modifier].id)
-                                worthChangeVerift()
-                            }
-                        }
-                    }
-                    //ChatLib.chat(item.tag.ExtraAttributes.id + ": " + lowestBinsAvg[item.tag.ExtraAttributes.id])
-                } catch (e) {
-                    console.log(JSON.stringify(e))
-                }
+                let oD = lastWeekData[thing]
+                let cD = currData[thing]
+                let change = Math.round((cD - oD) * 100) / 100
 
-                if (item.containsItems !== undefined) {
-                    item.containsItems.forEach((item2) => {
-                        if (item2.Count !== undefined) {
-                            worth += getItemWorth(item2)
-                        }
-                    })
-                }
-
-                return worth * item.Count;
-            }
-
-
-            function getAverageLowestBin(item) {
-                if (lowestBinsAvg[item] === undefined) {
-                    return lowestBins[item]
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + uuidData.name + " has gained " + numberWithCommas(change) + " " + thing + " in the last month! (" + numberWithCommas(oD) + " -> " + numberWithCommas(cD) + ")"))
                 } else {
-                    if (lowestBinsAvg[item] < 0) {
-                        return lowestBins[item]
-                    }
-                    return lowestBinsAvg[item]
+                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + uuidData.name + " has gained " + numberWithCommas(change) + " " + thing + " in the last month! (" + numberWithCommas(oD) + " -> " + numberWithCommas(cD) + ")"))
                 }
             }
+            // commandFunctions.nw = function (player, command, args, reply) {
+            //     if (args[1] === undefined) {
+            //         args[1] = player
+            //     }
 
-            function getPetWorth(pet) {
-                let worth = 0;
-                let worthLast = 0;
+                
+            //     let uuidData
+            //     try {
+            //         uuidData = JSON.parse(FileLib.getUrlContent("https://api.mojang.com/users/profiles/minecraft/" + (args[1])))
+            //     } catch (e) {
+            //         reply("Invalid Username!")
+            //         return;
+            //     }
+                
+            //     let data2 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/player_skyblock/" + (uuidData.id) + "?key=dee67f9c765cf8df&items"))
+            //     let data3 = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/v2/leaderboard/networth/user/" + (uuidData.id) + "?key=dee67f9c765cf8df&items"))
 
-                let petReplace = ["COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"]
+            //     let nw = args[1] === "current" ? data2.data.profiles[data2.data.stats.currentProfileId].members[uuidData.id].soopyNetworth : data2.data.profiles[data2.data.stats.bestProfileId].members[uuidData.id].soopyNetworth
 
-                function worthChangeVerift() {
-                    if (worth.toString() === "NaN" || worth.toString() === "undefined") {
-                        worth = worthLast
-                    }
-                    worthLast = worth
-                }
+            //     let totalnw = nw.networth
+            //     let position = (data3?.data?.data?.position+1)
+            //     // totalnw += data2.data.profiles[data2.data.stats.bestProfileId].stats.bank_balance || 0
 
-                try {
-                    worth += getAverageLowestBin(pet.type + ";" + petReplace.indexOf(pet.tier))
-                    worthChangeVerift()
-                    worth += getAverageLowestBin(pet.heldItem)
-                    worthChangeVerift()
-                    worth += getAverageLowestBin("PET_SKIN_" + pet.skin)
-                    worthChangeVerift()
-                    //ChatLib.chat(item.tag.ExtraAttributes.id + ": " + lowestBinsAvg[item.tag.ExtraAttributes.id])
-                } catch (e) {
-                    console.log(JSON.stringify(e))
-                }
+            //     reply(uuidData.name + "'s networth: $" + (numberWithCommas(Math.floor(totalnw))) + (position ? " (#" + numberWithCommas(position) + ")" : ""))
+            // }
 
-                //console.log(pet.type + " " + pet.tier + ": $" + addNotation("oneLetters", worth))
-                return worth;
-            }
+            // function getItemWorth(item) {
+            //     let worth = 0;
+            //     let worthLast = 0;
+
+            //     function worthChangeVerift() {
+            //         if (worth.toString() === "NaN" || worth.toString() === "undefined") {
+            //             worth = worthLast
+            //         }
+            //         worthLast = worth
+            //     }
+
+            //     try {
+            //         if (item.tag !== undefined) {
+            //             if (item.tag.ExtraAttributes !== undefined) {
+            //                 let alb = undefined
+            //                 if (bazaar[item.tag.ExtraAttributes.id] === undefined) {
+            //                     worth += getAverageLowestBin(item.tag.ExtraAttributes.id)
+            //                     alb = getAverageLowestBin(item.tag.ExtraAttributes.id)
+            //                 } else {
+            //                     worth += bazaar[item.tag.ExtraAttributes.id].price
+            //                 }
+            //                 worthChangeVerift()
+            //                 if (alb && alb > 50000) {
+            //                     worth += bazaar.RECOMBOBULATOR_3000.price * item.tag.ExtraAttributes.rarity_upgrades
+            //                 }
+            //                 worthChangeVerift()
+            //                 worth += bazaar.HOT_POTATO_BOOK.price * Math.min(10, item.tag.ExtraAttributes.hot_potato_count)
+            //                 worthChangeVerift()
+            //                 worth += bazaar.FUMING_POTATO_BOOK.price * Math.max(0, item.tag.ExtraAttributes.hot_potato_count - 10)
+            //                 worthChangeVerift()
+            //                 if (item.tag.ExtraAttributes.ability_scroll !== undefined) {
+            //                     item.tag.ExtraAttributes.ability_scroll.forEach((scrollId) => {
+            //                         worth += getAverageLowestBin(scrollId)
+            //                         worthChangeVerift()
+            //                     })
+            //                 }
+            //                 if (item.tag.ExtraAttributes.gems !== undefined) {
+            //                     Object.keys(item.tag.ExtraAttributes.gems).forEach(gem => {
+            //                         let gemId = item.tag.ExtraAttributes.gems[gem] + "_"
+            //                         let a = gem.split("_")
+            //                         a.pop()
+            //                         gemId += a.join("_")
+            //                         gemId += "_GEM"
+
+            //                         if (bazaar[gemId]) {
+            //                             worth += (bazaar[gemId].price || 0)
+            //                             worthChangeVerift()
+            //                         }
+            //                     })
+            //                 }
+            //                 try {
+            //                     item.tag.ExtraAttributes.enchantments.forEach((enchant) => {
+            //                         worth += getAverageLowestBin(enchant + ";" + item.tag.ExtraAttributes.enchantments[enchant])
+            //                         worthChangeVerift()
+            //                     })
+            //                 } catch (e) { }
+            //                 if (reforgeToStone[item.tag.ExtraAttributes.modifier] !== undefined) {
+            //                     worth += getAverageLowestBin(reforgeToStone[item.tag.ExtraAttributes.modifier].id)
+            //                     worthChangeVerift()
+            //                 }
+            //             }
+            //         }
+            //         //ChatLib.chat(item.tag.ExtraAttributes.id + ": " + lowestBinsAvg[item.tag.ExtraAttributes.id])
+            //     } catch (e) {
+            //         console.log(JSON.stringify(e))
+            //     }
+
+            //     if (item.containsItems !== undefined) {
+            //         item.containsItems.forEach((item2) => {
+            //             if (item2.Count !== undefined) {
+            //                 worth += getItemWorth(item2)
+            //             }
+            //         })
+            //     }
+
+            //     return worth * item.Count;
+            // }
+
+
+            // function getAverageLowestBin(item) {
+            //     if (lowestBinsAvg[item] === undefined) {
+            //         return lowestBins[item]
+            //     } else {
+            //         if (lowestBinsAvg[item] < 0) {
+            //             return lowestBins[item]
+            //         }
+            //         return lowestBinsAvg[item]
+            //     }
+            // }
+
+            // function getPetWorth(pet) {
+            //     let worth = 0;
+            //     let worthLast = 0;
+
+            //     let petReplace = ["COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"]
+
+            //     function worthChangeVerift() {
+            //         if (worth.toString() === "NaN" || worth.toString() === "undefined") {
+            //             worth = worthLast
+            //         }
+            //         worthLast = worth
+            //     }
+
+            //     try {
+            //         worth += getAverageLowestBin(pet.type + ";" + petReplace.indexOf(pet.tier))
+            //         worthChangeVerift()
+            //         worth += getAverageLowestBin(pet.heldItem)
+            //         worthChangeVerift()
+            //         worth += getAverageLowestBin("PET_SKIN_" + pet.skin)
+            //         worthChangeVerift()
+            //         //ChatLib.chat(item.tag.ExtraAttributes.id + ": " + lowestBinsAvg[item.tag.ExtraAttributes.id])
+            //     } catch (e) {
+            //         console.log(JSON.stringify(e))
+            //     }
+
+            //     //console.log(pet.type + " " + pet.tier + ": $" + addNotation("oneLetters", worth))
+            //     return worth;
+            // }
 
             commandFunctions.missingpets = function (player, command, args, reply) {
                 if (args[1] === undefined) {
@@ -2527,7 +2568,7 @@ register("worldLoad", () => {
 
                 let missingPets = data.profiles[profile].data.missingPets
 
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingPets.length + " pets!"))
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot (" + missingPets.slice(0, 5).map(pet => pet.display_name).join(" | ") + (missingPets.length > 5 ? " | and " + (missingPets.length - 5) + " more" : "") + ")"))
                 } else {
@@ -2551,7 +2592,7 @@ register("worldLoad", () => {
 
                 let missingTalis = data.profiles[profile].data.missingTalismans
 
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (args[1] === player ? "You are" : args[1] + " is") + " missing " + missingTalis.missing.length + " talismans (" + missingTalis.upgrades.length + " upgrades)!"))
                     if (missingTalis.missing.length > 0) commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Talismans: (" + missingTalis.missing.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.missing.length > 5 ? " | and " + (missingTalis.missing.length - 5) + " more" : "") + ")"))
                     if (missingTalis.upgrades.length > 0) commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Upgrades: (" + missingTalis.upgrades.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.upgrades.length > 5 ? " | and " + (missingTalis.upgrades.length - 5) + " more" : "") + ")"))
@@ -2561,36 +2602,36 @@ register("worldLoad", () => {
                     if (missingTalis.upgrades.length > 0) commandQueue.other.push(spamBypass("/gc @" + player + ", Upgrades: (" + missingTalis.upgrades.slice(0, 5).map(talis => talis.display_name).join(" | ") + (missingTalis.upgrades.length > 5 ? " | and " + (missingTalis.upgrades.length - 5) + " more" : "") + ")"))
                 }
             }
-            commandFunctions.ehp = function (player, command, args, reply) {
-                if (args.length < 2) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot usage: /ehp [health] [defence]!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", usage: /ehp [health] [defence]!"))
-                    }
-                    return;
-                }
-                if (parseFloat[args[1]] > 0 || parseFloat[args[2]] > 0) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot usage: /ehp [health] [defence]!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", usage: /ehp [health] [defence]!"))
-                    }
-                    return;
-                }
+            // commandFunctions.ehp = function (player, command, args, reply) {
+            //     if (args.length < 2) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot usage: /ehp [health] [defence]!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", usage: /ehp [health] [defence]!"))
+            //         }
+            //         return;
+            //     }
+            //     if (parseFloat[args[1]] > 0 || parseFloat[args[2]] > 0) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot usage: /ehp [health] [defence]!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", usage: /ehp [health] [defence]!"))
+            //         }
+            //         return;
+            //     }
 
-                let ehp = numberWithCommas(Math.round(parseFloat(args[1]) * ((parseFloat(args[2]) / 100) + 1)))
-                if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + ehp + " ehp!"))
-                } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", " + ehp + " ehp!"))
-                }
-            }
+            //     let ehp = numberWithCommas(Math.round(parseFloat(args[1]) * ((parseFloat(args[2]) / 100) + 1)))
+            //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + ehp + " ehp!"))
+            //     } else {
+            //         commandQueue.other.push(spamBypass("/gc @" + player + ", " + ehp + " ehp!"))
+            //     }
+            // }
             commandFunctions.commandspamfactor = function (player, command, args, reply) {
-                if (commandsSpeed > commandsSpeedLimit) {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot the current command spam amount is " + commandsSpeed.toFixed(2) + "!"))
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot the current command spam amount is " + commandQueue.commandsSpeed.toFixed(2) + "!"))
                 } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", the current command spam amount is " + commandsSpeed.toFixed(2) + "!"))
+                    commandQueue.other.push(spamBypass("/gc @" + player + ", the current command spam amount is " + commandQueue.commandsSpeed.toFixed(2) + "!"))
                 }
             }
             commandFunctions.talismans = function (player, command, args, reply) {
@@ -2601,7 +2642,7 @@ register("worldLoad", () => {
 
                 let stats1 = JSON.parse(FileLib.getUrlContent("https://api.slothpixel.me/api/players/" + playerScan))
                 if (stats1.error === "Player does not exist") {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid player!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", invalid player!"))
@@ -2638,7 +2679,7 @@ register("worldLoad", () => {
                     messageGChat = "There was a error :("
                 }
 
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + messageGChat))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + messageGChat))
@@ -2648,97 +2689,97 @@ register("worldLoad", () => {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + mess))
                 })
             }
-            commandFunctions.skill = function (player, command, args, reply) {
-                if (args[1] === undefined || args[2] === undefined) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot requires 2 arguments!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", requires 2 arguments!"))
-                    }
-                    return;
-                }
-                let skillReplace = {
-                    "dungeon": "dungeoneering",
-                    "catacombs": "dungeoneering"
-                }
-                if (skillReplace[args[1]] !== undefined) {
-                    args[1] = skillReplace[args[1]]
-                }
+            // commandFunctions.skill = function (player, command, args, reply) {
+            //     if (args[1] === undefined || args[2] === undefined) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot requires 2 arguments!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", requires 2 arguments!"))
+            //         }
+            //         return;
+            //     }
+            //     let skillReplace = {
+            //         "dungeon": "dungeoneering",
+            //         "catacombs": "dungeoneering"
+            //     }
+            //     if (skillReplace[args[1]] !== undefined) {
+            //         args[1] = skillReplace[args[1]]
+            //     }
 
-                if (skillData.collections[args[1].toUpperCase()] === undefined) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill type!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", invalid skill type!"))
-                    }
-                    return;
-                }
+            //     if (skillData.collections[args[1].toUpperCase()] === undefined) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill type!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", invalid skill type!"))
+            //         }
+            //         return;
+            //     }
 
-                args[2] = parseInt(args[2]) - 1
-
-
-                if (args[3] !== undefined) {
-                    args[3] = parseInt(args[3]) - 1
-
-                    if (skillData.collections[args[1].toUpperCase()].levels[args[3]] === undefined) {
-                        if (commandsSpeed > commandsSpeedLimit) {
-                            commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill level!"))
-                        } else {
-                            commandQueue.other.push(spamBypass("/gc @" + player + ", invalid skill level!"))
-                        }
-                        return;
-                    }
-
-                    let needExp = 0
-                    if (args[2] === -1) {
-                        needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired)
-                    } else {
-
-                        if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
-                            if (commandsSpeed > commandsSpeedLimit) {
-                                commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill level!"))
-                            } else {
-                                commandQueue.other.push(spamBypass("/gc @" + player + ", invalid skill level!"))
-                            }
-                            return;
-                        }
-                        needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired - skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired)
-                    }
+            //     args[2] = parseInt(args[2]) - 1
 
 
-                    let expinfo = "it takes " + needExp + " exp to go from " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " -> " + (args[3] + 1)
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + expinfo))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", " + expinfo))
-                    }
-                    return;
-                }
-                if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
-                    if (commandsSpeed > commandsSpeedLimit) {
-                        commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill level!"))
-                    } else {
-                        commandQueue.other.push(spamBypass("/gc @" + player + ", invalid skill level!"))
-                    }
-                    return;
-                }
+            //     if (args[3] !== undefined) {
+            //         args[3] = parseInt(args[3]) - 1
 
-                if (commandsSpeed > commandsSpeedLimit) {
+            //         if (skillData.collections[args[1].toUpperCase()].levels[args[3]] === undefined) {
+            //             if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //                 commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill level!"))
+            //             } else {
+            //                 commandQueue.other.push(spamBypass("/gc @" + player + ", invalid skill level!"))
+            //             }
+            //             return;
+            //         }
 
-                } else {
-                    commandQueue.other.push(spamBypass("/gc @" + player + ", dming u the results :)"))
-                }
+            //         let needExp = 0
+            //         if (args[2] === -1) {
+            //             needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired)
+            //         } else {
 
-                Thread.sleep(500)
+            //             if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
+            //                 if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill level!"))
+            //                 } else {
+            //                     commandQueue.other.push(spamBypass("/gc @" + player + ", invalid skill level!"))
+            //                 }
+            //                 return;
+            //             }
+            //             needExp = addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[3]].totalExpRequired - skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired)
+            //         }
 
-                commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " (" + addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired) + " exp)"))
-                skillData.collections[args[1].toUpperCase()].levels[args[2]].unlocks.forEach((unlock) => {
-                    commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + unlock))
-                })
-            }
+
+            //         let expinfo = "it takes " + needExp + " exp to go from " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " -> " + (args[3] + 1)
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + expinfo))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", " + expinfo))
+            //         }
+            //         return;
+            //     }
+            //     if (skillData.collections[args[1].toUpperCase()].levels[args[2]] === undefined) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+            //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid skill level!"))
+            //         } else {
+            //             commandQueue.other.push(spamBypass("/gc @" + player + ", invalid skill level!"))
+            //         }
+            //         return;
+            //     }
+
+            //     if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
+
+            //     } else {
+            //         commandQueue.other.push(spamBypass("/gc @" + player + ", dming u the results :)"))
+            //     }
+
+            //     Thread.sleep(500)
+
+            //     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + firstLetterCapital(args[1].toLowerCase()) + " " + (args[2] + 1) + " (" + addNotation("oneLetters", skillData.collections[args[1].toUpperCase()].levels[args[2]].totalExpRequired) + " exp)"))
+            //     skillData.collections[args[1].toUpperCase()].levels[args[2]].unlocks.forEach((unlock) => {
+            //         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + unlock))
+            //     })
+            // }
             commandFunctions.whatstone = function (player, command, args, reply) {
                 if (args[1] === undefined) {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot you need to specify what reforge!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", you need to specify what reforge!"))
@@ -2747,7 +2788,7 @@ register("worldLoad", () => {
                 }
 
                 if (reforgeToStone[firstLetterCapital(args[1])] === undefined) {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot invalid reforge!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", invalid reforge!"))
@@ -2756,21 +2797,21 @@ register("worldLoad", () => {
                 }
 
 
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + firstLetterCapital(args[1]) + " is from " + reforgeToStone[firstLetterCapital(args[1])].name + "!"))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + firstLetterCapital(args[1]) + " is from " + reforgeToStone[firstLetterCapital(args[1])].name + "!"))
                 }
             }
             commandFunctions.amibetterthanagentlai = function (player, command, args, reply) {
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.length % 2 === 0 ? "yes" : "no") + "."))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + (player.length % 2 === 0 ? "yes" : "no") + "."))
                 }
             }
             commandFunctions.amiworsethanagentlai = function (player, command, args, reply) {
-                if (commandsSpeed > commandsSpeedLimit) {
+                if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                     commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (player.length % 2 === 0 ? "no" : "yes") + "."))
                 } else {
                     commandQueue.other.push(spamBypass("/gc @" + player + ", " + (player.length % 2 === 0 ? "no" : "yes") + "."))
@@ -2789,13 +2830,13 @@ register("worldLoad", () => {
             //         leftBots = leftBots.filter(a=>a!==rBot)
             //     }
             //     if(bot.length > 0){
-            //         if (commandsSpeed > commandsSpeedLimit) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
             //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot Random frag bot" + (bot.length>1?"s are ":" is ") + bot.join(", ") + "!"))
             //         } else {
             //             commandQueue.other.push(spamBypass("/gc @" + player + ", Random frag bot" + (bot.length>1?"s are ":" is ") + bot.join(", ") + "!"))
             //         }
             //     }else{
-            //         if (commandsSpeed > commandsSpeedLimit) {
+            //         if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
             //             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot There are no online fragbots!"))
             //         } else {
             //             commandQueue.other.push(spamBypass("/gc @" + player + ", There are no online fragbots!"))
@@ -2950,7 +2991,7 @@ register("worldLoad", () => {
                 players.forEach((p, i) => {
                     if (p.username.toLowerCase() === args[1].toLowerCase() || (i + 1).toString() === args[1]) {
                         done = true
-                        if (commandsSpeed > commandsSpeedLimit) {
+                        if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                             commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot " + (p.username.toLowerCase() === player.toLowerCase() ? "You are" : p.username + " is") + " #" + (i + 1) + " on the " + args[0] + " lb! (" + numberWithCommas(getThing(p, args[0])) + ")"))
                         } else {
                             commandQueue.other.push(spamBypass("/gc @" + player + ", " + (p.username.toLowerCase() === player.toLowerCase() ? "You are" : p.username + " is") + " #" + (i + 1) + " on the " + args[0] + " lb! (" + numberWithCommas(getThing(p, args[0])) + ")"))
@@ -2959,7 +3000,7 @@ register("worldLoad", () => {
                 })
 
                 if (!done) {
-                    if (commandsSpeed > commandsSpeedLimit) {
+                    if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                         commandQueue.dm.push(spamBypass("/msg " + player + " @sbgbot could not find \"" + args[1] + "\" on the lb. if you are new to the guild wait for up to 1 day for it to update!"))
                     } else {
                         commandQueue.other.push(spamBypass("/gc @" + player + ", could not find \"" + args[1] + "\" on the lb. if you are new to the guild wait for up to 1 day for it to update!"))
