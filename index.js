@@ -281,8 +281,8 @@ register("worldLoad", () => {
                         tcommand = tcommand || commandFunctionsStaff[command] || commandFunctionsStaff[commandAlias[command]]
                     }
 
+                    let res = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/shouldRunCommand.json?key=lkRFxoMYwrkgovPRn2zt&command=" + sha256(player + ": " + args.join(" "))))
                     if (tcommand) {
-                        let res = JSON.parse(FileLib.getUrlContent("http://soopymc.my.to/api/sbgBot/shouldRunCommand.json?key=lkRFxoMYwrkgovPRn2zt&command=" + sha256(player + ": " + args.join(" "))))
                         if (res.result) {
                             tcommand(player, command, args, (message) => {
                                 if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
