@@ -3,28 +3,31 @@ import socketData from "../soopyApis/socketData"
 import commandQueue from "./command"
 
 class SbgBotServer extends WebsiteCommunicator {
-    constructor(){
+    constructor() {
         super(socketData.serverNameToId.sbgbot)
     }
 
-    onData(data){
-        if(data.type === "sendMsg"){
-            commandQueue.other.push(spamBypass("/gc "+data.msg))
+    onData(data) {
+        if (data.type === "sendMsg") {
+            commandQueue.other.push(spamBypass("/gc " + data.msg))
         }
-        if(data.type === "sendMsgTo"){
+        if (data.type === "sendMsgTo") {
             if (commandQueue.commandsSpeed > commandQueue.commandsSpeedLimit) {
                 commandQueue.dm.push(spamBypass("/msg " + data.user + " @sbgbot " + data.msg))
             } else {
                 commandQueue.other.push(spamBypass("/gc @" + data.user + ", " + data.msg))
             }
         }
+        if (data.type === "guildSetRank") {
+            commandQueue.other.push("/g setRank " + data.user + " " + data.rank)
+        }
     }
 
-    onConnect(){
-        
+    onConnect() {
+
     }
 
-    sendMessage(player, message){
+    sendMessage(player, message) {
         this.sendData({
             type: "chatMessage",
             user: player,
@@ -33,10 +36,10 @@ class SbgBotServer extends WebsiteCommunicator {
     }
 }
 
-if(!global.sbgBotServer){
+if (!global.sbgBotServer) {
     global.sbgBotServer = new SbgBotServer()
-    
-    register("gameUnload", ()=>{
+
+    register("gameUnload", () => {
         global.sbgBotServer = undefined
     })
 }
